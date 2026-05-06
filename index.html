@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CredibleState — Find Verified PGs, Flats & Villas in Hyderabad</title>
+<meta name="description" content="CredibleState — Hyderabad's most trusted property platform. Zero brokerage. Verified listings. Find PGs, flats, houses and villas directly from owners.">
+<meta name="keywords" content="PG in Hyderabad, flats for rent Hyderabad, apartments Hyderabad, zero brokerage, verified listings, CredibleState">
+<meta property="og:title" content="CredibleState — Verified Homes in Hyderabad">
+<meta property="og:description" content="Find PGs, Flats, Villas in Hyderabad. Zero brokerage. Direct from owners.">
+<meta property="og:url" content="https://crediblestate.com">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+/* ===================== RESET & TOKENS ===================== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#100E0B;--ink2:#4A4238;--ink3:#9C9488;
+  --cream:#FAF7F2;--cream2:#F0EBE3;--cream3:#E5DDD3;
+  --rust:#B84A1E;--rust2:#D4582A;--rust-light:#FBF0EB;
+  --forest:#1E4D35;--forest-light:#EBF5EF;
+  --sky:#1A4A7A;--sky-light:#EBF2FB;
+  --gold:#B88A1E;--gold-light:#FBF5EB;
+  --border:#DDD7CF;--r:14px;
+  --shadow:0 2px 20px rgba(16,14,11,.07);
+  --shadow-lg:0 8px 40px rgba(16,14,11,.13);
+}
+html{scroll-behavior:smooth}
+body{font-family:'Outfit',sans-serif;background:var(--cream);color:var(--ink);font-size:15px;overflow-x:hidden}
+img{max-width:100%;display:block}
+a{text-decoration:none;color:inherit}
+button,input,select,textarea{font-family:inherit}
+.sr-only{position:absolute;width:1px;height:1px;clip:rect(0,0,0,0);overflow:hidden}
+
+/* ===================== NAV ===================== */
+#navbar{position:fixed;top:0;left:0;right:0;z-index:500;transition:background .3s,box-shadow .3s;padding:0 5vw;display:flex;align-items:center;justify-content:space-between;height:64px}
+#navbar.scrolled{background:#fff;box-shadow:0 1px 16px rgba(0,0,0,.08)}
+.nav-logo{font-family:'Playfair Display',serif;font-size:22px;color:#fff;cursor:pointer;transition:color .2s}
+#navbar.scrolled .nav-logo{color:var(--rust)}
+.nav-logo span{color:rgba(255,255,255,.6);font-size:18px}
+#navbar.scrolled .nav-logo span{color:var(--ink3)}
+.nav-links{display:flex;align-items:center;gap:28px}
+.nav-links a{font-size:14px;font-weight:500;color:rgba(255,255,255,.85);cursor:pointer;transition:color .2s}
+#navbar.scrolled .nav-links a{color:var(--ink2)}
+.nav-links a:hover{color:#fff}
+#navbar.scrolled .nav-links a:hover{color:var(--rust)}
+.nav-cta{background:#fff;color:var(--rust);border:none;padding:8px 20px;border-radius:24px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+#navbar.scrolled .nav-cta{background:var(--rust);color:#fff}
+.nav-cta:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px}
+.hamburger span{width:24px;height:2px;background:#fff;border-radius:2px;transition:all .3s}
+#navbar.scrolled .hamburger span{background:var(--ink)}
+
+/* ===================== HERO ===================== */
+.hero{min-height:100vh;background:linear-gradient(160deg,#1A120A 0%,#2C1A0E 40%,#0E2218 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:100px 5vw 60px;text-align:center;position:relative;overflow:hidden}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:60px 60px;pointer-events:none}
+.hero-orb{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none}
+.hero-orb1{width:500px;height:500px;background:rgba(184,74,30,.25);top:-100px;right:-100px}
+.hero-orb2{width:400px;height:400px;background:rgba(30,77,53,.2);bottom:-80px;left:-80px}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.8);padding:6px 16px;border-radius:24px;font-size:13px;font-weight:500;margin-bottom:24px;backdrop-filter:blur(10px)}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(36px,6vw,72px);color:#fff;line-height:1.1;margin-bottom:18px;max-width:800px}
+.hero h1 em{color:#E8732F;font-style:italic}
+.hero-sub{color:rgba(255,255,255,.6);font-size:clamp(15px,2vw,18px);max-width:520px;margin:0 auto 40px;line-height:1.6}
+.hero-stats{display:flex;gap:40px;justify-content:center;margin-top:48px;flex-wrap:wrap}
+.hero-stat{color:rgba(255,255,255,.55);font-size:13px;text-align:center}
+.hero-stat strong{display:block;font-family:'Playfair Display',serif;font-size:30px;color:#fff;font-weight:400}
+
+/* ===================== SEARCH BOX ===================== */
+.search-box{background:#fff;border-radius:16px;padding:8px 8px 8px 20px;display:flex;align-items:center;gap:12px;max-width:640px;width:100%;box-shadow:0 16px 60px rgba(0,0,0,.3);margin:0 auto}
+.search-box input{flex:1;border:none;outline:none;font-size:15px;color:var(--ink);background:transparent;min-width:0}
+.search-box input::placeholder{color:var(--ink3)}
+.search-sep{width:1px;height:32px;background:var(--border);flex-shrink:0}
+.search-type{border:none;outline:none;font-size:14px;color:var(--ink2);background:transparent;padding:4px 12px;cursor:pointer;flex-shrink:0}
+.search-btn{background:var(--rust);color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .2s;flex-shrink:0}
+.search-btn:hover{background:var(--rust2)}
+
+/* ===================== SECTIONS ===================== */
+section{padding:80px 5vw}
+.section-tag{display:inline-block;background:var(--rust-light);color:var(--rust);padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px}
+.section-head{text-align:center;margin-bottom:48px}
+.section-head h2{font-family:'Playfair Display',serif;font-size:clamp(28px,4vw,44px);color:var(--ink);margin-bottom:12px}
+.section-head p{color:var(--ink3);max-width:480px;margin:0 auto;line-height:1.6}
+
+/* ===================== QUICK FILTERS ===================== */
+.qf-bar{background:#fff;border-bottom:1px solid var(--border);padding:0 5vw;display:flex;align-items:center;gap:8px;overflow-x:auto;position:sticky;top:64px;z-index:400}
+.qf-bar::-webkit-scrollbar{display:none}
+.qf{padding:16px 18px;font-size:13px;font-weight:500;cursor:pointer;color:var(--ink3);border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s}
+.qf:hover{color:var(--ink)}
+.qf.on{color:var(--rust);border-bottom-color:var(--rust)}
+
+/* ===================== LISTINGS SECTION ===================== */
+#listings-section{background:var(--cream);padding:40px 5vw 80px}
+.listings-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:12px;flex-wrap:wrap}
+.listings-toolbar h3{font-size:18px;font-weight:600}
+.listings-toolbar span{font-size:13px;color:var(--ink3)}
+.sort-sel{border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-size:13px;color:var(--ink2);background:#fff;cursor:pointer;outline:none}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
+
+/* ===================== PROPERTY CARD ===================== */
+.pcard{background:#fff;border-radius:var(--r);border:1px solid var(--border);overflow:hidden;cursor:pointer;transition:transform .2s,box-shadow .2s}
+.pcard:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+.pcard-img{height:170px;display:flex;align-items:center;justify-content:center;font-size:48px;position:relative}
+.pcard-type{position:absolute;top:10px;left:10px;padding:3px 10px;border-radius:10px;font-size:10px;font-weight:700;letter-spacing:.05em}
+.pcard-verified{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.95);padding:3px 9px;border-radius:10px;font-size:10px;font-weight:600;color:var(--forest);display:flex;align-items:center;gap:3px}
+.pcard-fav{position:absolute;bottom:10px;right:10px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.9);border:none;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:transform .15s}
+.pcard-fav:hover{transform:scale(1.15)}
+.pcard-body{padding:14px}
+.pcard-price{font-family:'Playfair Display',serif;font-size:21px}
+.pcard-price em{font-family:'Outfit',sans-serif;font-size:12px;font-style:normal;color:var(--ink3)}
+.pcard-name{font-size:13px;font-weight:500;margin:4px 0 3px}
+.pcard-loc{font-size:12px;color:var(--ink3);margin-bottom:10px;display:flex;align-items:center;gap:4px}
+.pcard-tags{display:flex;gap:6px;flex-wrap:wrap}
+.ptag{background:var(--cream2);color:var(--ink2);padding:3px 9px;border-radius:6px;font-size:11px;font-weight:500}
+.ptag-g{background:var(--forest-light);color:var(--forest)}
+
+/* ===================== HOW IT WORKS ===================== */
+.how-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:28px;max-width:900px;margin:0 auto}
+.how-card{text-align:center;padding:32px 24px;background:#fff;border-radius:var(--r);border:1px solid var(--border);transition:box-shadow .2s}
+.how-card:hover{box-shadow:var(--shadow)}
+.how-num{width:48px;height:48px;border-radius:12px;background:var(--rust);color:#fff;font-family:'Playfair Display',serif;font-size:22px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.how-card h3{font-size:16px;font-weight:600;margin-bottom:8px}
+.how-card p{font-size:13px;color:var(--ink3);line-height:1.6}
+
+/* ===================== WHY US ===================== */
+.why-sec{background:linear-gradient(135deg,#1A120A,#2C1A0E,#0E2218);padding:80px 5vw}
+.why-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;max-width:960px;margin:0 auto}
+.why-card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);padding:24px;backdrop-filter:blur(10px)}
+.why-card .ic{font-size:32px;margin-bottom:12px}
+.why-card h3{font-size:15px;font-weight:600;color:#fff;margin-bottom:6px}
+.why-card p{font-size:13px;color:rgba(255,255,255,.55);line-height:1.6}
+
+/* ===================== TESTIMONIALS ===================== */
+.testi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;max-width:960px;margin:0 auto}
+.testi-card{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:24px}
+.testi-stars{color:#E8732F;margin-bottom:12px;font-size:14px}
+.testi-text{font-size:14px;color:var(--ink2);line-height:1.7;margin-bottom:16px;font-style:italic}
+.testi-author{display:flex;align-items:center;gap:10px}
+.testi-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff}
+.testi-name{font-size:13px;font-weight:600}
+.testi-role{font-size:11px;color:var(--ink3)}
+
+/* ===================== CTA BANNER ===================== */
+.cta-banner{background:var(--rust);padding:64px 5vw;text-align:center}
+.cta-banner h2{font-family:'Playfair Display',serif;font-size:clamp(24px,4vw,40px);color:#fff;margin-bottom:12px}
+.cta-banner p{color:rgba(255,255,255,.7);margin-bottom:28px;font-size:15px}
+.cta-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.btn-white{background:#fff;color:var(--rust);border:none;padding:13px 28px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-white:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.btn-outline-white{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.5);padding:13px 28px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-outline-white:hover{background:rgba(255,255,255,.1)}
+
+/* ===================== FOOTER ===================== */
+footer{background:var(--ink);padding:60px 5vw 24px}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:48px}
+.footer-logo{font-family:'Playfair Display',serif;font-size:24px;color:#fff;margin-bottom:12px}
+.footer-logo span{color:var(--ink3)}
+.footer-desc{font-size:13px;color:var(--ink3);line-height:1.7;margin-bottom:16px}
+.footer-social{display:flex;gap:10px}
+.social-btn{width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;transition:background .2s}
+.social-btn:hover{background:var(--rust)}
+.footer-col h4{font-size:12px;font-weight:600;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px}
+.footer-col a{display:block;font-size:13px;color:var(--ink3);margin-bottom:9px;cursor:pointer;transition:color .2s}
+.footer-col a:hover{color:#fff}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.08);padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:gap}
+.footer-bottom p{font-size:12px;color:var(--ink3)}
+
+/* ===================== MAP PAGE ===================== */
+#map-page{display:none;position:fixed;inset:64px 0 0 0;z-index:300}
+.map-toolbar{background:#fff;border-bottom:1px solid var(--border);padding:10px 20px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.map-search{flex:1;min-width:180px;display:flex;align-items:center;gap:8px;background:var(--cream);border:1px solid var(--border);border-radius:10px;padding:8px 12px}
+.map-search input{border:none;outline:none;background:transparent;font-size:14px;color:var(--ink);width:100%}
+.chip{padding:7px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--ink2);white-space:nowrap;transition:all .18s}
+.chip.on{background:var(--rust);color:#fff;border-color:var(--rust)}
+.map-layout{display:flex;height:calc(100% - 57px)}
+.map-sidebar{width:300px;flex-shrink:0;background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.map-sidebar-head{padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.map-list{flex:1;overflow-y:auto;padding:8px}
+.map-item{border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer;transition:all .18s;display:flex;gap:10px}
+.map-item:hover,.map-item.active{border-color:var(--rust);background:var(--rust-light)}
+.map-icon{width:42px;height:42px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.map-wrap{flex:1;position:relative}
+#leaflet-map{width:100%;height:100%}
+.map-detail{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);width:90%;max-width:380px;background:#fff;border-radius:14px;border:1px solid var(--border);box-shadow:var(--shadow-lg);padding:16px;z-index:1000;display:none}
+.map-detail.show{display:block}
+.map-legend{position:absolute;top:12px;right:12px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:10px 12px;z-index:999;font-size:11px}
+.leg-row{display:flex;align-items:center;gap:7px;margin-bottom:5px;color:var(--ink2)}
+.leg-dot{width:10px;height:10px;border-radius:50%}
+
+/* ===================== LIST FORM PAGE ===================== */
+#list-page{display:none;min-height:100vh;background:var(--cream);padding:100px 5vw 60px}
+.list-form-wrap{max-width:620px;margin:0 auto;background:#fff;border-radius:20px;border:1px solid var(--border);padding:36px;box-shadow:var(--shadow)}
+.list-form-wrap h2{font-family:'Playfair Display',serif;font-size:28px;margin-bottom:6px}
+.list-form-wrap > p{font-size:14px;color:var(--ink3);margin-bottom:28px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fg{margin-bottom:18px}
+.fg label{display:block;font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px}
+.fg input,.fg select,.fg textarea{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;color:var(--ink);background:var(--cream);outline:none;transition:border-color .2s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--rust);background:#fff}
+.amenity-grid{display:flex;flex-wrap:wrap;gap:8px}
+.am-check{display:flex;align-items:center;gap:6px;padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px;color:var(--ink2);background:var(--cream);transition:all .15s}
+.am-check:hover{border-color:var(--rust);color:var(--rust)}
+.am-check input{accent-color:var(--rust)}
+.submit-success{background:var(--forest-light);border:1.5px solid var(--forest);border-radius:10px;padding:16px;text-align:center;display:none}
+.submit-success.show{display:block}
+
+/* ===================== TENANT DASHBOARD ===================== */
+#dash-page{display:none;min-height:100vh;background:var(--cream);padding-top:64px}
+.dash-layout{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 64px)}
+.dash-nav{background:#fff;border-right:1px solid var(--border);padding:20px 12px;position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.dash-user{padding:10px 10px 16px;border-bottom:1px solid var(--border);margin-bottom:8px;display:flex;gap:10px;align-items:center}
+.dash-av{width:40px;height:40px;border-radius:50%;background:var(--rust);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;flex-shrink:0}
+.dash-av-name{font-size:13px;font-weight:600}
+.dash-av-role{font-size:11px;color:var(--ink3)}
+.dn-label{font-size:10px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;padding:10px 10px 6px;margin-top:6px}
+.dn-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;cursor:pointer;color:var(--ink2);font-size:13px;font-weight:500;transition:all .15s;position:relative}
+.dn-item:hover{background:var(--cream2)}
+.dn-item.active{background:var(--rust-light);color:var(--rust)}
+.dn-badge{margin-left:auto;background:var(--rust);color:#fff;font-size:10px;font-weight:600;padding:1px 7px;border-radius:20px}
+.dn-badge.g{background:var(--forest)}
+.dash-content{padding:28px;overflow-y:auto}
+.dash-page{display:none}.dash-page.active{display:block}
+.dash-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.dash-head h2{font-family:'Playfair Display',serif;font-size:24px}
+
+/* ---- Stat row ---- */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.stat-c{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:18px}
+.stat-c .s-ic{font-size:24px;margin-bottom:8px}
+.stat-c .s-lb{font-size:11px;color:var(--ink3);font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.stat-c .s-vl{font-family:'Playfair Display',serif;font-size:28px}
+.stat-c .s-sb{font-size:12px;color:var(--ink3);margin-top:3px}
+
+/* ---- Saved props ---- */
+.sp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+
+/* ---- Visits ---- */
+.visit-c{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;display:flex;gap:14px;align-items:flex-start;margin-bottom:10px}
+.v-date{width:54px;height:54px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0}
+.v-date .vd{font-family:'Playfair Display',serif;font-size:24px;line-height:1}
+.v-date .vm{font-size:10px;text-transform:uppercase;letter-spacing:.05em}
+.v-status{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;margin-left:auto}
+.vs-up{background:var(--sky-light);color:var(--sky)}
+.vs-done{background:var(--cream2);color:var(--ink3)}
+.vs-can{background:#FDEAEA;color:#B82828}
+
+/* ---- Chat ---- */
+.chat-shell{display:grid;grid-template-columns:240px 1fr;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;height:460px;background:#fff}
+.chat-list-panel{border-right:1px solid var(--border);overflow-y:auto}
+.chat-item{padding:12px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s;position:relative}
+.chat-item:hover,.chat-item.active{background:var(--rust-light)}
+.chat-item-name{font-size:13px;font-weight:500}
+.chat-item-prev{font-size:11px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.chat-item-time{font-size:10px;color:var(--ink3);position:absolute;top:12px;right:12px}
+.chat-item-unread{width:16px;height:16px;background:var(--rust);border-radius:50%;color:#fff;font-size:9px;font-weight:600;display:flex;align-items:center;justify-content:center;position:absolute;bottom:12px;right:12px}
+.chat-window-panel{display:flex;flex-direction:column}
+.chat-win-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.chat-win-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;flex-shrink:0}
+.chat-msgs-area{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:70%;padding:9px 13px;border-radius:12px;font-size:13px;line-height:1.5}
+.msg-in{background:var(--cream2);color:var(--ink);border-bottom-left-radius:3px;align-self:flex-start}
+.msg-out{background:var(--rust);color:#fff;border-bottom-right-radius:3px;align-self:flex-end}
+.msg-time{font-size:10px;opacity:.6;margin-top:3px}
+.chat-inp-row{padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+.chat-inp{flex:1;border:1.5px solid var(--border);border-radius:20px;padding:9px 14px;font-size:13px;outline:none;background:var(--cream)}
+.chat-inp:focus{border-color:var(--rust)}
+.send-btn{width:38px;height:38px;border-radius:50%;background:var(--rust);border:none;color:#fff;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* ---- Payments ---- */
+.pay-tbl{width:100%;border-collapse:collapse}
+.pay-tbl th{font-size:11px;color:var(--ink3);font-weight:500;text-transform:uppercase;letter-spacing:.05em;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
+.pay-tbl td{padding:13px 14px;border-bottom:1px solid var(--border);font-size:13px}
+.pay-tbl tr:last-child td{border-bottom:none}
+.pay-status{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600}
+.ps-paid{background:var(--forest-light);color:var(--forest)}
+.ps-due{background:#FDEAEA;color:#B82828}
+
+/* ---- Docs ---- */
+.doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.doc-c{background:#fff;border:1.5px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;text-align:center;transition:all .15s}
+.doc-c:hover{border-color:var(--rust);background:var(--rust-light)}
+.doc-ic{font-size:36px;margin-bottom:10px}
+.doc-nm{font-size:13px;font-weight:500;margin-bottom:3px}
+.doc-meta{font-size:11px;color:var(--ink3)}
+
+/* ---- Profile ---- */
+.profile-wrap{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:28px;max-width:520px}
+
+/* ===================== BUTTONS ===================== */
+.btn-primary{background:var(--rust);color:#fff;border:none;padding:11px 22px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:background .2s;font-family:'Outfit',sans-serif}
+.btn-primary:hover{background:var(--rust2)}
+.btn-secondary{background:#fff;color:var(--ink);border:1.5px solid var(--border);padding:11px 22px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s}
+.btn-secondary:hover{border-color:var(--rust);color:var(--rust)}
+.btn-sm{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--ink2);font-family:'Outfit',sans-serif;transition:all .15s}
+.btn-sm:hover{border-color:var(--rust);color:var(--rust)}
+.btn-sm-p{background:var(--rust);color:#fff;border-color:var(--rust)}
+.btn-sm-p:hover{background:var(--rust2);color:#fff}
+
+/* ===================== MODAL ===================== */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal-box{background:#fff;border-radius:20px;max-width:660px;width:100%;max-height:90vh;overflow-y:auto;position:relative}
+.modal-hero{height:220px;display:flex;align-items:center;justify-content:center;font-size:60px;border-radius:20px 20px 0 0;position:relative}
+.modal-close{position:absolute;top:14px;right:14px;width:32px;height:32px;background:rgba(255,255,255,.9);border:none;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.modal-body{padding:22px}
+.modal-price{font-family:'Playfair Display',serif;font-size:30px;color:var(--rust)}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:16px 0;padding:16px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.mg-stat .v{font-size:18px;font-weight:600;text-align:center}
+.mg-stat .l{font-size:11px;color:var(--ink3);margin-top:2px;text-align:center}
+.amenity-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.amenity-pill{background:var(--cream2);color:var(--ink2);padding:5px 12px;border-radius:8px;font-size:12px}
+.modal-cta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+
+/* ===================== TOAST ===================== */
+.toast{position:fixed;bottom:28px;right:28px;background:var(--ink);color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:500;z-index:2000;transition:all .3s;transform:translateY(16px);opacity:0;pointer-events:none;max-width:300px}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* ===================== MOBILE NAV MENU ===================== */
+.mobile-menu{position:fixed;top:64px;left:0;right:0;background:#fff;border-bottom:1px solid var(--border);padding:16px 5vw;z-index:499;display:none;flex-direction:column;gap:12px;box-shadow:var(--shadow)}
+.mobile-menu.open{display:flex}
+.mobile-menu a{font-size:15px;font-weight:500;color:var(--ink2);cursor:pointer;padding:8px 0;border-bottom:1px solid var(--border)}
+
+/* ===================== RESPONSIVE ===================== */
+@media(max-width:900px){
+  .footer-grid{grid-template-columns:1fr 1fr}
+  .stat-row{grid-template-columns:1fr 1fr}
+  .dash-layout{grid-template-columns:1fr}
+  .dash-nav{display:none}
+  .chat-shell{grid-template-columns:1fr}
+  .chat-list-panel{display:none}
+  .map-sidebar{display:none}
+}
+@media(max-width:640px){
+  .nav-links{display:none}
+  .hamburger{display:flex}
+  .search-box{flex-wrap:wrap;border-radius:12px}
+  .search-sep{display:none}
+  .hero-stats{gap:20px}
+  .form-row{grid-template-columns:1fr}
+  .cards-grid{grid-template-columns:1fr 1fr}
+  .footer-grid{grid-template-columns:1fr}
+}
+@media(max-width:420px){
+  .cards-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== NAVBAR ===================== -->
+<nav id="navbar">
+  <div class="nav-logo" onclick="goHome()">Credible<span>State</span></div>
+  <div class="nav-links">
+    <a onclick="goHome()">Home</a>
+    <a onclick="showSection('listings')">Browse</a>
+    <a onclick="showMapPage()">Map View</a>
+    <a onclick="showDash()">Dashboard</a>
+    <a onclick="showListPage()">List Property</a>
+  </div>
+  <button class="nav-cta" onclick="showListPage()">List Your Property</button>
+  <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobile-menu">
+  <a onclick="goHome();toggleMenu()">Home</a>
+  <a onclick="showSection('listings');toggleMenu()">Browse Properties</a>
+  <a onclick="showMapPage();toggleMenu()">Map View</a>
+  <a onclick="showDash();toggleMenu()">Tenant Dashboard</a>
+  <a onclick="showListPage();toggleMenu()">List Property</a>
+</div>
+
+<!-- ===================== MAIN SITE ===================== -->
+<div id="main-site">
+
+  <!-- HERO -->
+  <section class="hero" id="home-section">
+    <div class="hero-grid"></div>
+    <div class="hero-orb hero-orb1"></div>
+    <div class="hero-orb hero-orb2"></div>
+    <div style="position:relative;z-index:1;width:100%;display:flex;flex-direction:column;align-items:center">
+      <div class="hero-tag">🏠 Zero Brokerage &nbsp;·&nbsp; Verified Listings &nbsp;·&nbsp; Hyderabad</div>
+      <h1>Find Your <em>Perfect</em><br>Home in Hyderabad</h1>
+      <p class="hero-sub">PGs, Flats, Houses & Premium Villas — all verified, all direct from owners. No broker fees. Ever.</p>
+      <div class="search-box">
+        <span style="font-size:18px;color:var(--ink3)">🔍</span>
+        <input type="text" id="hero-search" placeholder="Search by area, locality, property type…" oninput="filterCards()">
+        <div class="search-sep"></div>
+        <select class="search-type" id="hero-type" onchange="filterCards()">
+          <option value="">All Types</option>
+          <option value="PG">PG</option>
+          <option value="Flat">Flat</option>
+          <option value="Villa">Villa</option>
+          <option value="House">House</option>
+        </select>
+        <button class="search-btn" onclick="filterCards();showSection('listings')">Search →</button>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><strong>4,200+</strong>Verified Listings</div>
+        <div class="hero-stat"><strong>₹0</strong>Brokerage Fee</div>
+        <div class="hero-stat"><strong>12K+</strong>Happy Tenants</div>
+        <div class="hero-stat"><strong>48hr</strong>Avg Move-In</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUICK FILTER BAR -->
+  <div class="qf-bar" id="qf-bar">
+    <div class="qf on" onclick="setQF(this,'')">All Properties</div>
+    <div class="qf" onclick="setQF(this,'PG')">🛏 PG / Hostel</div>
+    <div class="qf" onclick="setQF(this,'Flat')">🏢 Flats</div>
+    <div class="qf" onclick="setQF(this,'Villa')">🏡 Villas</div>
+    <div class="qf" onclick="setQF(this,'House')">🏘 Houses</div>
+    <div class="qf" onclick="setQF(this,'furnished')">✅ Fully Furnished</div>
+    <div class="qf" onclick="setQF(this,'wifi')">📶 WiFi</div>
+    <div class="qf" onclick="setQF(this,'gym')">💪 Gym</div>
+    <div class="qf" onclick="setQF(this,'parking')">🚗 Parking</div>
+    <div class="qf" onclick="showMapPage()">🗺 Map View</div>
+  </div>
+
+  <!-- LISTINGS -->
+  <div id="listings-section">
+    <div class="listings-toolbar">
+      <div><h3 id="result-label">Showing 12 properties</h3><span>in Hyderabad — Zero Brokerage</span></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select class="sort-sel" id="sort-sel" onchange="filterCards()">
+          <option>Price: Low to High</option>
+          <option>Price: High to Low</option>
+          <option>Verified First</option>
+          <option>Newest First</option>
+        </select>
+        <button class="btn-sm" onclick="showMapPage()">🗺 Map</button>
+      </div>
+    </div>
+    <div class="cards-grid" id="cards-grid"></div>
+    <div id="no-results" style="display:none;text-align:center;padding:60px 16px;color:var(--ink3)">
+      <div style="font-size:48px;margin-bottom:14px">🏚</div>
+      <p style="font-size:16px">No properties found. Try different filters.</p>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <section style="background:var(--cream2)">
+    <div class="section-head">
+      <div class="section-tag">How It Works</div>
+      <h2>Find a Home in 3 Simple Steps</h2>
+      <p>We've removed every unnecessary step between you and your new home.</p>
+    </div>
+    <div class="how-grid">
+      <div class="how-card"><div class="how-num">1</div><h3>Search & Filter</h3><p>Browse verified listings by area, budget, and type. Real photos, real addresses.</p></div>
+      <div class="how-card"><div class="how-num">2</div><h3>Visit & Connect</h3><p>Schedule a visit directly with the owner. Zero middlemen, zero broker calls.</p></div>
+      <div class="how-card"><div class="how-num">3</div><h3>Move In</h3><p>Sign your digital rent agreement and move in. Entire process under 48 hours.</p></div>
+    </div>
+  </section>
+
+  <!-- WHY CREDIBLESTATE -->
+  <section class="why-sec">
+    <div class="section-head">
+      <div class="section-tag" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.7)">Why CredibleState</div>
+      <h2 style="color:#fff">Built on Trust. Powered by Verification.</h2>
+      <p style="color:rgba(255,255,255,.5)">We physically verify every property before it goes live. No fakes. No spam calls. No surprises.</p>
+    </div>
+    <div class="why-grid">
+      <div class="why-card"><div class="ic">✅</div><h3>100% Verified Listings</h3><p>Every property is physically inspected and photo-verified before going live on our platform.</p></div>
+      <div class="why-card"><div class="ic">💰</div><h3>Zero Brokerage</h3><p>Direct owner contact. No middlemen, no brokerage. Save up to ₹1 lakh on every rental.</p></div>
+      <div class="why-card"><div class="ic">📍</div><h3>Exact Addresses</h3><p>We show you the real address on a map. No vague locality names or fake pin drops.</p></div>
+      <div class="why-card"><div class="ic">📝</div><h3>Digital Agreements</h3><p>Sign your rent agreement digitally. Police verification, e-stamp, all in one place.</p></div>
+      <div class="why-card"><div class="ic">🔒</div><h3>Safe & Private</h3><p>Your number is never shared without consent. No spam calls from unknown brokers.</p></div>
+      <div class="why-card"><div class="ic">⚡</div><h3>Move In 48hrs</h3><p>From finding to finalising — our streamlined process gets you moved in within 48 hours.</p></div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section style="background:var(--cream)">
+    <div class="section-head">
+      <div class="section-tag">Testimonials</div>
+      <h2>Loved by Tenants Across Hyderabad</h2>
+    </div>
+    <div class="testi-grid">
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"Found my 2BHK in Hitech City in just 2 days. The owner was genuine and the listing was exactly as shown. Saved ₹44,000 in brokerage!"</p>
+        <div class="testi-author"><div class="testi-av" style="background:var(--rust)">AR</div><div><div class="testi-name">Arjun Reddy</div><div class="testi-role">Software Engineer, Gachibowli</div></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"As a girl moving to Hyderabad alone, I was worried. CredibleState showed verified PGs with lady wardens. Felt so safe and it was budget-friendly too."</p>
+        <div class="testi-author"><div class="testi-av" style="background:var(--forest)">PS</div><div><div class="testi-name">Priya Sharma</div><div class="testi-role">MBA Student, Kondapur</div></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"Listed my property and got 5 serious inquiries in 3 days. All verified tenants. The digital rent agreement feature is a game changer for landlords."</p>
+        <div class="testi-author"><div class="testi-av" style="background:var(--sky)">SK</div><div><div class="testi-name">Suresh Kumar</div><div class="testi-role">Property Owner, Hitech City</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA BANNER -->
+  <div class="cta-banner">
+    <h2>Ready to Find Your Home?</h2>
+    <p>Join 12,000+ tenants who found their perfect place — broker-free.</p>
+    <div class="cta-btns">
+      <button class="btn-white" onclick="showSection('listings')">Browse Properties</button>
+      <button class="btn-outline-white" onclick="showListPage()">List Your Property Free</button>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <div class="footer-logo">Credible<span>State</span></div>
+        <p class="footer-desc">Hyderabad's most trusted property platform. Zero brokerage, verified listings, direct from owners. Find your perfect PG, flat, house or villa.</p>
+        <div class="footer-social">
+          <div class="social-btn" onclick="toast('Follow us on Instagram!')">📸</div>
+          <div class="social-btn" onclick="toast('Follow us on Twitter!')">🐦</div>
+          <div class="social-btn" onclick="toast('Join our WhatsApp!')">💬</div>
+          <div class="social-btn" onclick="toast('Find us on LinkedIn!')">💼</div>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Browse</h4>
+        <a onclick="setQF(document.querySelector('.qf'),'');showSection('listings')">All Properties</a>
+        <a onclick="filterByType('PG')">PG / Hostels</a>
+        <a onclick="filterByType('Flat')">Flats & Apartments</a>
+        <a onclick="filterByType('Villa')">Villas & Luxury</a>
+        <a onclick="filterByType('House')">Independent Houses</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a onclick="toast('About Us page coming soon!')">About CredibleState</a>
+        <a onclick="toast('Careers page coming soon!')">Careers</a>
+        <a onclick="toast('Blog coming soon!')">Blog</a>
+        <a onclick="toast('Contact: hello@crediblestate.com')">Contact Us</a>
+        <a onclick="toast('Press kit coming soon!')">Press</a>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <a onclick="toast('Privacy policy coming soon!')">Privacy Policy</a>
+        <a onclick="toast('Terms of service coming soon!')">Terms of Service</a>
+        <a onclick="toast('Cookie policy coming soon!')">Cookie Policy</a>
+        <a onclick="toast('RERA compliance info coming soon!')">RERA Compliance</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025 CredibleState. All rights reserved. crediblestate.com</p>
+      <p>Made with ❤️ in Hyderabad, India</p>
+    </div>
+  </footer>
+</div>
+
+<!-- ===================== MAP PAGE ===================== -->
+<div id="map-page">
+  <div class="map-toolbar">
+    <div class="map-search">
+      <span style="font-size:15px;color:var(--ink3)">🔍</span>
+      <input type="text" id="map-search-inp" placeholder="Search area, locality…" oninput="mapFilter()">
+    </div>
+    <div class="chip on" data-type="" onclick="mapChip(this)">All</div>
+    <div class="chip" data-type="PG" onclick="mapChip(this)">🛏 PG</div>
+    <div class="chip" data-type="Flat" onclick="mapChip(this)">🏢 Flat</div>
+    <div class="chip" data-type="Villa" onclick="mapChip(this)">🏡 Villa</div>
+    <div class="chip" data-type="House" onclick="mapChip(this)">🏘 House</div>
+    <button class="btn-sm" onclick="closeMapPage()" style="margin-left:auto">← Back</button>
+  </div>
+  <div class="map-layout">
+    <div class="map-sidebar">
+      <div class="map-sidebar-head">
+        <div style="font-size:14px;font-weight:600">Properties</div>
+        <div id="map-count" style="font-size:12px;color:var(--ink3)">12 listings</div>
+      </div>
+      <div class="map-list" id="map-list"></div>
+    </div>
+    <div class="map-wrap">
+      <div id="leaflet-map"></div>
+      <div class="map-legend">
+        <div style="font-size:10px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Type</div>
+        <div class="leg-row"><div class="leg-dot" style="background:#B84A1E"></div> PG</div>
+        <div class="leg-row"><div class="leg-dot" style="background:#1A4A7A"></div> Flat</div>
+        <div class="leg-row"><div class="leg-dot" style="background:#1E4D35"></div> Villa</div>
+        <div class="leg-row"><div class="leg-dot" style="background:#5B3FA0"></div> House</div>
+      </div>
+      <div class="map-detail" id="map-detail"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== LIST PROPERTY PAGE ===================== -->
+<div id="list-page">
+  <div class="list-form-wrap">
+    <h2>List Your Property</h2>
+    <p>Reach thousands of verified tenants. Zero brokerage platform — free to list.</p>
+    <div class="fg">
+      <label>Property Type</label>
+      <select><option>PG / Hostel</option><option>Apartment / Flat</option><option>Independent House</option><option>Villa</option></select>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Owner Name</label><input type="text" placeholder="Your full name"></div>
+      <div class="fg"><label>Phone Number</label><input type="tel" placeholder="+91 XXXXX XXXXX"></div>
+    </div>
+    <div class="fg"><label>Property Title</label><input type="text" placeholder="e.g. 2BHK near Hitech City Metro"></div>
+    <div class="fg"><label>Full Address</label><input type="text" placeholder="Street, Locality, Hyderabad"></div>
+    <div class="form-row">
+      <div class="fg"><label>Monthly Rent (₹)</label><input type="number" placeholder="15000"></div>
+      <div class="fg"><label>Security Deposit (₹)</label><input type="number" placeholder="30000"></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Bedrooms</label><select><option>1 BHK</option><option>2 BHK</option><option>3 BHK</option><option>4+ BHK</option><option>Studio</option></select></div>
+      <div class="fg"><label>Area (sq ft)</label><input type="number" placeholder="850"></div>
+    </div>
+    <div class="fg">
+      <label>Amenities Available</label>
+      <div class="amenity-grid">
+        <label class="am-check"><input type="checkbox"> WiFi</label>
+        <label class="am-check"><input type="checkbox"> AC</label>
+        <label class="am-check"><input type="checkbox"> Parking</label>
+        <label class="am-check"><input type="checkbox"> Gym</label>
+        <label class="am-check"><input type="checkbox"> Meals</label>
+        <label class="am-check"><input type="checkbox"> Lift</label>
+        <label class="am-check"><input type="checkbox"> CCTV</label>
+        <label class="am-check"><input type="checkbox"> Power Backup</label>
+        <label class="am-check"><input type="checkbox"> Garden</label>
+        <label class="am-check"><input type="checkbox"> Pool</label>
+      </div>
+    </div>
+    <div class="fg"><label>Property Description</label><textarea rows="4" placeholder="Describe your property — neighbourhood, nearby landmarks, transport, special features…"></textarea></div>
+    <div class="submit-success" id="list-success">
+      <div style="font-size:32px;margin-bottom:10px">🎉</div>
+      <strong style="color:var(--forest);font-size:16px;display:block;margin-bottom:6px">Listing Submitted!</strong>
+      Our team will verify and publish your property within 24 hours. We'll call you to confirm.
+    </div>
+    <button class="btn-primary" style="width:100%;margin-top:16px;padding:14px" onclick="submitListing()">Submit for Verification →</button>
+    <p style="font-size:12px;color:var(--ink3);text-align:center;margin-top:10px">Free listing · Verified badge · Published in 24hrs</p>
+    <button class="btn-secondary" style="width:100%;margin-top:10px" onclick="closeListPage()">← Back to Home</button>
+  </div>
+</div>
+
+<!-- ===================== TENANT DASHBOARD ===================== -->
+<div id="dash-page">
+  <div class="dash-layout">
+    <div class="dash-nav">
+      <div class="dash-user">
+        <div class="dash-av">AR</div>
+        <div><div class="dash-av-name">Arjun Reddy</div><div class="dash-av-role">Tenant · Hyderabad</div></div>
+      </div>
+      <div class="dn-label">Overview</div>
+      <div class="dn-item active" onclick="goDash('d-home')">🏠 <span>Dashboard</span></div>
+      <div class="dn-item" onclick="goDash('d-saved')">❤️ <span>Saved</span> <span class="dn-badge">4</span></div>
+      <div class="dn-item" onclick="goDash('d-applications')">📋 <span>Applications</span> <span class="dn-badge g">2</span></div>
+      <div class="dn-label">Activity</div>
+      <div class="dn-item" onclick="goDash('d-visits')">📅 <span>My Visits</span> <span class="dn-badge">3</span></div>
+      <div class="dn-item" onclick="goDash('d-messages')">💬 <span>Messages</span> <span class="dn-badge">5</span></div>
+      <div class="dn-label">Rental</div>
+      <div class="dn-item" onclick="goDash('d-payments')">💳 <span>Payments</span></div>
+      <div class="dn-item" onclick="goDash('d-documents')">📄 <span>Documents</span></div>
+      <div class="dn-label">Account</div>
+      <div class="dn-item" onclick="goDash('d-profile')">👤 <span>Profile</span></div>
+      <div class="dn-item" onclick="closeAllPages()">🏠 <span>Back to Site</span></div>
+    </div>
+
+    <div class="dash-content">
+      <!-- D-HOME -->
+      <div class="dash-page active" id="d-home">
+        <div class="dash-head"><div><h2>Good morning, Arjun 👋</h2><span style="font-size:13px;color:var(--ink3)">Your rental activity at a glance</span></div><button class="btn-primary" onclick="closeAllPages()">+ Find Property</button></div>
+        <div class="stat-row">
+          <div class="stat-c"><div class="s-ic">❤️</div><div class="s-lb">Saved</div><div class="s-vl">4</div><div class="s-sb">properties wishlisted</div></div>
+          <div class="stat-c"><div class="s-ic">📅</div><div class="s-lb">Upcoming Visits</div><div class="s-vl">2</div><div class="s-sb">next: May 3, 11am</div></div>
+          <div class="stat-c"><div class="s-ic">💬</div><div class="s-lb">Messages</div><div class="s-vl" style="color:var(--rust)">5</div><div class="s-sb">unread from owners</div></div>
+          <div class="stat-c"><div class="s-ic">📋</div><div class="s-lb">Applications</div><div class="s-vl" style="color:var(--forest)">2</div><div class="s-sb">1 approved</div></div>
+        </div>
+        <div style="font-size:12px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Quick Actions</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px">
+          <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;cursor:pointer" onclick="goDash('d-saved')"><div style="font-size:26px;margin-bottom:6px">❤️</div><div style="font-size:12px;font-weight:500">Saved</div></div>
+          <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;cursor:pointer" onclick="goDash('d-visits')"><div style="font-size:26px;margin-bottom:6px">📅</div><div style="font-size:12px;font-weight:500">Visits</div></div>
+          <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;cursor:pointer" onclick="goDash('d-messages')"><div style="font-size:26px;margin-bottom:6px">💬</div><div style="font-size:12px;font-weight:500">Messages</div></div>
+          <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;cursor:pointer" onclick="goDash('d-payments')"><div style="font-size:26px;margin-bottom:6px">💳</div><div style="font-size:12px;font-weight:500">Payments</div></div>
+        </div>
+        <div style="font-size:12px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Recent Activity</div>
+        <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
+          <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center"><span style="font-size:20px">📩</span><div style="flex:1"><div style="font-size:13px;font-weight:500">New message from Rajesh K. (Gachibowli PG)</div><div style="font-size:11px;color:var(--ink3)">2 hours ago</div></div><button class="btn-sm" onclick="goDash('d-messages')">Reply</button></div>
+          <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center"><span style="font-size:20px">✅</span><div style="flex:1"><div style="font-size:13px;font-weight:500">Application approved — 2BHK Hitech City</div><div style="font-size:11px;color:var(--forest)">Yesterday · Move-in: May 10</div></div><button class="btn-sm btn-sm-p" onclick="goDash('d-documents')">Sign Agreement</button></div>
+          <div style="padding:14px 16px;display:flex;gap:12px;align-items:center"><span style="font-size:20px">📅</span><div style="flex:1"><div style="font-size:13px;font-weight:500">Visit confirmed — Girls PG, Kondapur</div><div style="font-size:11px;color:var(--ink3)">May 3, 11:00 AM</div></div><button class="btn-sm" onclick="goDash('d-visits')">View</button></div>
+        </div>
+      </div>
+
+      <!-- D-SAVED -->
+      <div class="dash-page" id="d-saved">
+        <div class="dash-head"><h2>Saved Properties</h2><span style="font-size:13px;color:var(--ink3)">4 wishlisted</span></div>
+        <div class="sp-grid" id="d-saved-grid"></div>
+      </div>
+
+      <!-- D-APPLICATIONS -->
+      <div class="dash-page" id="d-applications">
+        <div class="dash-head"><h2>My Applications</h2><span style="font-size:13px;color:var(--ink3)">2 active</span></div>
+        <div id="d-apps-list"></div>
+      </div>
+
+      <!-- D-VISITS -->
+      <div class="dash-page" id="d-visits">
+        <div class="dash-head"><h2>My Visits</h2><button class="btn-primary" onclick="toast('Visit scheduler opening...')">+ Schedule Visit</button></div>
+        <div style="font-size:12px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Upcoming</div>
+        <div id="d-visits-up"></div>
+        <div style="font-size:12px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em;margin:20px 0 10px">Past</div>
+        <div id="d-visits-past"></div>
+      </div>
+
+      <!-- D-MESSAGES -->
+      <div class="dash-page" id="d-messages">
+        <div class="dash-head"><h2>Messages</h2><span style="font-size:13px;color:var(--ink3)">5 unread</span></div>
+        <div class="chat-shell">
+          <div class="chat-list-panel" id="d-chat-list"></div>
+          <div class="chat-window-panel">
+            <div class="chat-win-head" id="d-chat-head"></div>
+            <div class="chat-msgs-area" id="d-chat-msgs"></div>
+            <div class="chat-inp-row">
+              <input class="chat-inp" id="d-msg-inp" placeholder="Type a message…" onkeydown="if(event.key==='Enter')dSendMsg()">
+              <button class="send-btn" onclick="dSendMsg()">➤</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- D-PAYMENTS -->
+      <div class="dash-page" id="d-payments">
+        <div class="dash-head"><h2>Rent Payments</h2><button class="btn-primary" onclick="toast('Payment gateway loading...')">Pay Now</button></div>
+        <div style="background:#FDEAEA;border:1px solid #B82828;border-radius:var(--r);padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <span style="font-size:24px">⚠️</span>
+          <div style="flex:1"><div style="font-size:13px;font-weight:600;color:#B82828">Rent Due — May 1st</div><div style="font-size:12px;color:#B82828;opacity:.8">₹22,000 pending · Pay before May 5 to avoid late fee</div></div>
+          <button class="btn-sm btn-sm-p" style="background:#B82828;border-color:#B82828" onclick="toast('Redirecting to payment...')">Pay ₹22,000</button>
+        </div>
+        <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
+          <table class="pay-tbl" id="d-pay-tbl"></table>
+        </div>
+      </div>
+
+      <!-- D-DOCUMENTS -->
+      <div class="dash-page" id="d-documents">
+        <div class="dash-head"><h2>Documents</h2><button class="btn-sm" onclick="toast('Upload document...')">+ Upload</button></div>
+        <div class="doc-grid" id="d-doc-grid"></div>
+      </div>
+
+      <!-- D-PROFILE -->
+      <div class="dash-page" id="d-profile">
+        <div class="dash-head"><h2>My Profile</h2><button class="btn-primary" onclick="toast('Profile saved!')">Save Changes</button></div>
+        <div class="profile-wrap">
+          <div style="width:64px;height:64px;border-radius:50%;background:var(--rust);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600;color:#fff;margin-bottom:18px">AR</div>
+          <div class="fg"><label>Full Name</label><input value="Arjun Reddy"></div>
+          <div class="form-row">
+            <div class="fg"><label>Phone</label><input value="+91 98765 43210"></div>
+            <div class="fg"><label>Email</label><input value="arjun.reddy@gmail.com"></div>
+          </div>
+          <div class="fg"><label>Occupation</label><select><option selected>Software Engineer</option><option>Student</option><option>Business Owner</option></select></div>
+          <div class="fg"><label>Preferred Budget / month</label><input type="range" min="3000" max="60000" value="15000" style="width:100%;accent-color:var(--rust)" oninput="this.nextElementSibling.textContent='Up to ₹'+Number(this.value).toLocaleString('en-IN')"><div style="font-size:12px;color:var(--ink3);margin-top:4px">Up to ₹15,000</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PROPERTY MODAL ===================== -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-hero" id="modal-hero">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast-el"></div>
+
+<!-- ===================== SCRIPTS ===================== -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+/* ============ DATA ============ */
+const PROPS=[
+  {id:1,type:'PG',emoji:'🏠',name:'Cozy PG for Working Professionals',loc:'Gachibowli',area:'Gachibowli, Hyderabad',lat:17.4401,lng:78.3489,price:8500,deposit:17000,beds:'Single',sqft:180,verified:true,furnished:true,amenities:['WiFi','Meals','Laundry','Hot Water','AC'],tags:['Meals Included','WiFi','AC'],bg:'linear-gradient(135deg,#2A1A0E,#3D2B18)',tc:'#B84A1E',bc:'#FBF0EB',desc:'Ideal for IT professionals. Walking distance to DLF Cyber City. Meals included, 24hr security, friendly flatmates.',mapColor:'#B84A1E'},
+  {id:2,type:'Flat',emoji:'🏢',name:'Spacious 2BHK with City View',loc:'Hitech City',area:'Hitech City, Hyderabad',lat:17.4473,lng:78.3762,price:22000,deposit:44000,beds:'2 BHK',sqft:950,verified:true,furnished:true,amenities:['Parking','Gym','Lift','Power Backup','Security'],tags:['Parking','Gym','Furnished'],bg:'linear-gradient(135deg,#0A1E32,#1A3050)',tc:'#1A4A7A',bc:'#EBF2FB',desc:'Premium apartment in Hitech City. Fully furnished with modular kitchen, gym access and covered parking.',mapColor:'#1A4A7A'},
+  {id:3,type:'Villa',emoji:'🏡',name:'Luxury 4BHK Villa with Private Pool',loc:'Banjara Hills',area:'Banjara Hills, Hyderabad',lat:17.4156,lng:78.4347,price:75000,deposit:150000,beds:'4 BHK',sqft:3200,verified:true,furnished:true,amenities:['Pool','Garden','Parking','Security','AC','Generator'],tags:['Pool','Garden','Luxury'],bg:'linear-gradient(135deg,#1A2E1F,#2D4A20)',tc:'#1E4D35',bc:'#EBF5EF',desc:'Standalone luxury villa in Banjara Hills. Private pool, landscaped garden, 24hr security and generator backup.',mapColor:'#1E4D35'},
+  {id:4,type:'PG',emoji:'🏠',name:'Girls PG — Safe & Secure',loc:'Kondapur',area:'Kondapur, Hyderabad',lat:17.4600,lng:78.3588,price:7500,deposit:15000,beds:'Shared',sqft:120,verified:true,furnished:true,amenities:['WiFi','CCTV','Meals','Wardrobe','AC'],tags:['Girls Only','Meals','CCTV'],bg:'linear-gradient(135deg,#2A1A0E,#3D2B18)',tc:'#B84A1E',bc:'#FBF0EB',desc:'100% women occupancy. Lady warden, CCTV surveillance, home-cooked meals twice a day.',mapColor:'#B84A1E'},
+  {id:5,type:'Flat',emoji:'🏢',name:'Modern 1BHK Studio Apartment',loc:'Madhapur',area:'Madhapur, Hyderabad',lat:17.4506,lng:78.3920,price:14500,deposit:29000,beds:'1 BHK',sqft:560,verified:false,furnished:true,amenities:['Parking','WiFi','Lift'],tags:['Studio','Near Metro','WiFi'],bg:'linear-gradient(135deg,#0A1E32,#1A3050)',tc:'#1A4A7A',bc:'#EBF2FB',desc:'Compact yet stylish 1BHK near Jubilee Hills checkpoint. Perfect for bachelors, close to metro.',mapColor:'#1A4A7A'},
+  {id:6,type:'House',emoji:'🏘',name:'3BHK Independent House',loc:'Kukatpally',area:'Kukatpally, Hyderabad',lat:17.4849,lng:78.3990,price:18000,deposit:36000,beds:'3 BHK',sqft:1400,verified:true,furnished:false,amenities:['Parking','Garden','Terrace','Power Backup'],tags:['Terrace','Garden','3 BHK'],bg:'linear-gradient(135deg,#1A1A2E,#2E2E4A)',tc:'#5B3FA0',bc:'#F0EBF9',desc:'Spacious independent house with large terrace and garden. Unfurnished.',mapColor:'#5B3FA0'},
+  {id:7,type:'PG',emoji:'🏠',name:'Co-living PG with Pool & Gym',loc:'Gachibowli',area:'Gachibowli, Hyderabad',lat:17.4368,lng:78.3512,price:6200,deposit:12400,beds:'Triple',sqft:100,verified:true,furnished:true,amenities:['WiFi','Meals','Gym','Pool','AC'],tags:['Pool','Gym','3 Meals'],bg:'linear-gradient(135deg,#2A1A0E,#4A2E1A)',tc:'#B84A1E',bc:'#FBF0EB',desc:'Modern co-living PG with pool and gym access. High-speed WiFi, 3 meals a day.',mapColor:'#B84A1E'},
+  {id:8,type:'Flat',emoji:'🏢',name:'Premium 3BHK in Gated Society',loc:'Narsingi',area:'Narsingi, Hyderabad',lat:17.4028,lng:78.3284,price:35000,deposit:70000,beds:'3 BHK',sqft:1750,verified:true,furnished:true,amenities:['Gym','Pool','Parking','Clubhouse','Security','AC'],tags:['Gated Society','Club','Pool'],bg:'linear-gradient(135deg,#0A1E32,#1A3050)',tc:'#1A4A7A',bc:'#EBF2FB',desc:'Semi-furnished in a premium gated society. Clubhouse, kids play area, tennis court.',mapColor:'#1A4A7A'},
+  {id:9,type:'Villa',emoji:'🏡',name:'Farmhouse Villa with 4000 sqft Lawn',loc:'Shamshabad',area:'Shamshabad, Hyderabad',lat:17.2403,lng:78.4294,price:55000,deposit:110000,beds:'3 BHK',sqft:4000,verified:false,furnished:false,amenities:['Garden','Parking','Security'],tags:['4000 sqft Lawn','Near Airport','Quiet'],bg:'linear-gradient(135deg,#1A2E1F,#2D4A20)',tc:'#1E4D35',bc:'#EBF5EF',desc:'Massive farmhouse villa with 4000 sqft lawn. Quiet neighbourhood near Hyderabad airport.',mapColor:'#1E4D35'},
+  {id:10,type:'Flat',emoji:'🏢',name:'Budget 1BHK for Students',loc:'Ameerpet',area:'Ameerpet, Hyderabad',lat:17.4375,lng:78.4483,price:9500,deposit:19000,beds:'1 BHK',sqft:420,verified:true,furnished:true,amenities:['WiFi','Lift','Water 24/7'],tags:['Student Friendly','Near Metro','Budget'],bg:'linear-gradient(135deg,#0A1E32,#1A3050)',tc:'#1A4A7A',bc:'#EBF2FB',desc:'Affordable furnished 1BHK close to coaching centers and metro.',mapColor:'#1A4A7A'},
+  {id:11,type:'House',emoji:'🏘',name:'2BHK Near Financial District',loc:'Nanakramguda',area:'Nanakramguda, Hyderabad',lat:17.4219,lng:78.3356,price:16500,deposit:33000,beds:'2 BHK',sqft:900,verified:true,furnished:false,amenities:['Parking','Power Backup','Security'],tags:['Near ORR','Financial District'],bg:'linear-gradient(135deg,#1A1A2E,#2E2E4A)',tc:'#5B3FA0',bc:'#F0EBF9',desc:'Well-maintained 2BHK near Financial District. 5 mins from Outer Ring Road.',mapColor:'#5B3FA0'},
+  {id:12,type:'PG',emoji:'🏠',name:'Luxury PG with AC Rooms',loc:'Hitech City',area:'Hitech City, Hyderabad',lat:17.4520,lng:78.3800,price:12000,deposit:24000,beds:'Single/Double',sqft:150,verified:true,furnished:true,amenities:['AC','WiFi','Laundry','Housekeeping','Parking'],tags:['AC Rooms','Housekeeping','Luxury'],bg:'linear-gradient(135deg,#2A1A0E,#3D2B18)',tc:'#B84A1E',bc:'#FBF0EB',desc:'Premium PG with individual AC rooms, daily housekeeping, laundry service. Steps from Cyber Towers.',mapColor:'#B84A1E'},
+];
+
+const CHATS=[
+  {id:1,name:'Rajesh K.',prop:'Gachibowli PG',color:'#B84A1E',time:'2h ago',unread:3,msgs:[{out:false,text:'Hello! Is the room still available?',time:'10:00 AM'},{out:true,text:'Yes it is! Would you like to schedule a visit?',time:'10:05 AM'},{out:false,text:'That would be great. How about Saturday morning?',time:'10:08 AM'},{out:true,text:'Saturday 11am works perfectly.',time:'10:12 AM'},{out:false,text:'Perfect! Can you share the exact address please?',time:'2h ago'}]},
+  {id:2,name:'Suresh K.',prop:'2BHK Hitech City',color:'#1A4A7A',time:'Yesterday',unread:1,msgs:[{out:false,text:'Your application has been approved! 🎉',time:'Yesterday'},{out:true,text:'That is wonderful news! When can I sign the agreement?',time:'Yesterday'},{out:false,text:'We can do it digitally via CredibleState. I will send the link.',time:'Yesterday'}]},
+  {id:3,name:'Priya M.',prop:'Girls PG Kondapur',color:'#1E4D35',time:'2 days ago',unread:0,msgs:[{out:true,text:'Hi! I saw your listing on CredibleState. Is WiFi included?',time:'2 days ago'},{out:false,text:'Yes, 100 Mbps fiber WiFi is included in the rent.',time:'2 days ago'}]},
+  {id:4,name:'Anand R.',prop:'Villa Banjara Hills',color:'#5B3FA0',time:'Apr 18',unread:0,msgs:[{out:true,text:'Hi Anand, I had to cancel my visit. Apologies.',time:'Apr 18'},{out:false,text:'No worries! You can reschedule anytime.',time:'Apr 18'}]},
+];
+
+const VISITS=[
+  {id:1,emoji:'🏠',name:'Girls PG — Safe & Secure',loc:'Kondapur, Hyderabad',day:'3',mon:'May',time:'11:00 AM',status:'upcoming',contact:'Priya M.'},
+  {id:2,emoji:'🏢',name:'2BHK Hitech City',loc:'Hitech City, Hyderabad',day:'6',mon:'May',time:'3:00 PM',status:'upcoming',contact:'Suresh K.'},
+  {id:3,emoji:'🏠',name:'Cozy PG Gachibowli',loc:'Gachibowli, Hyderabad',day:'24',mon:'Apr',time:'10:00 AM',status:'done',contact:'Rajesh K.'},
+];
+
+const PAYMENTS=[
+  {month:'May 2025',amount:22000,status:'due',date:'May 1',id:'CS-007'},
+  {month:'Apr 2025',amount:22000,status:'paid',date:'Apr 1',id:'CS-006'},
+  {month:'Mar 2025',amount:22000,status:'paid',date:'Mar 1',id:'CS-005'},
+  {month:'Feb 2025',amount:22000,status:'paid',date:'Feb 1',id:'CS-004'},
+];
+
+const DOCS=[
+  {icon:'📝',name:'Rent Agreement',meta:'Hitech City Flat · Pending sign',status:'pending'},
+  {icon:'🪪',name:'Aadhaar Card',meta:'Verified · Mar 15',status:'verified'},
+  {icon:'💼',name:'Employment Letter',meta:'Verified · Mar 15',status:'verified'},
+  {icon:'🏦',name:'Bank Statement',meta:'3 months · Verified',status:'verified'},
+  {icon:'📸',name:'Passport Photo',meta:'Verified · Mar 15',status:'verified'},
+  {icon:'📋',name:'Police Verification',meta:'Pending upload',status:'pending'},
+];
+
+const SAVED_IDS=[1,2,4,7];
+const APPS=[
+  {emoji:'🏢',name:'Spacious 2BHK with City View',loc:'Hitech City, Hyderabad',price:22000,step:2,steps:['Applied','Reviewed','Approved','Agreement'],status:'approved'},
+  {emoji:'🏠',name:'Girls PG — Safe & Secure',loc:'Kondapur, Hyderabad',price:7500,step:1,steps:['Applied','Reviewed','Approved','Agreement'],status:'reviewing'},
+];
+
+/* ============ STATE ============ */
+let favs=new Set([1,2,4,7]);
+let activeQF='';
+let activeChatId=1;
+let mapInst=null,mapMarkers={},mapSelId=null,mapActiveType='';
+
+/* ============ UTILS ============ */
+const fmt=n=>'₹'+n.toLocaleString('en-IN');
+
+function toast(msg){
+  const el=document.getElementById('toast-el');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+/* ============ NAV ============ */
+window.addEventListener('scroll',()=>{
+  document.getElementById('navbar').classList.toggle('scrolled',window.scrollY>30);
+});
+
+function toggleMenu(){
+  document.getElementById('mobile-menu').classList.toggle('open');
+}
+
+function goHome(){
+  closeAllPages();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function showSection(id){
+  closeAllPages();
+  const el=document.getElementById(id+'-section');
+  if(el) el.scrollIntoView({behavior:'smooth'});
+  else window.scrollTo({top:600,behavior:'smooth'});
+}
+
+function closeAllPages(){
+  document.getElementById('map-page').style.display='none';
+  document.getElementById('list-page').style.display='none';
+  document.getElementById('dash-page').style.display='none';
+  document.getElementById('main-site').style.display='block';
+  document.body.style.overflow='';
+}
+
+/* ============ LISTINGS ============ */
+function renderCards(list){
+  const grid=document.getElementById('cards-grid');
+  const noRes=document.getElementById('no-results');
+  document.getElementById('result-label').textContent=`Showing ${list.length} properties`;
+  if(!list.length){grid.innerHTML='';noRes.style.display='block';return}
+  noRes.style.display='none';
+  grid.innerHTML=list.map(p=>`
+    <div class="pcard" onclick="openModal(${p.id})">
+      <div class="pcard-img" style="background:${p.bg}">
+        ${p.emoji}
+        <div class="pcard-type" style="background:${p.bc};color:${p.tc}">${p.type}</div>
+        ${p.verified?`<div class="pcard-verified">✓ Verified</div>`:''}
+        <button class="pcard-fav" onclick="event.stopPropagation();toggleFav(${p.id})">${favs.has(p.id)?'❤️':'🤍'}</button>
+      </div>
+      <div class="pcard-body">
+        <div class="pcard-price">${fmt(p.price)} <em>/mo</em></div>
+        <div class="pcard-name">${p.name}</div>
+        <div class="pcard-loc">📍 ${p.area}</div>
+        <div class="pcard-tags">
+          ${p.tags.slice(0,2).map(t=>`<span class="ptag">${t}</span>`).join('')}
+          ${p.verified?`<span class="ptag ptag-g">✓ Verified</span>`:''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterCards(){
+  const q=(document.getElementById('hero-search').value||'').toLowerCase();
+  const tp=document.getElementById('hero-type').value;
+  const sort=document.getElementById('sort-sel').value;
+  let list=PROPS.filter(p=>{
+    const mQ=!q||p.name.toLowerCase().includes(q)||p.area.toLowerCase().includes(q)||p.type.toLowerCase().includes(q);
+    const mT=!tp||p.type===tp;
+    const mQF=!activeQF||p.type===activeQF||p.amenities.some(a=>a.toLowerCase().includes(activeQF))||(activeQF==='furnished'&&p.furnished);
+    return mQ&&mT&&mQF;
+  });
+  if(sort==='Price: High to Low') list.sort((a,b)=>b.price-a.price);
+  else if(sort==='Verified First') list.sort((a,b)=>b.verified-a.verified);
+  else list.sort((a,b)=>a.price-b.price);
+  renderCards(list);
+}
+
+function setQF(el,val){
+  document.querySelectorAll('.qf').forEach(q=>q.classList.remove('on'));
+  el.classList.add('on');
+  activeQF=val;
+  filterCards();
+  if(val!=='map') showSection('listings');
+}
+
+function filterByType(t){
+  document.getElementById('hero-type').value=t;
+  filterCards();
+  showSection('listings');
+}
+
+function toggleFav(id){
+  if(favs.has(id)){favs.delete(id);toast('Removed from wishlist')}
+  else{favs.add(id);toast('❤️ Added to wishlist!')}
+  filterCards();
+}
+
+/* ============ MODAL ============ */
+function openModal(id){
+  const p=PROPS.find(x=>x.id===id);
+  const hero=document.getElementById('modal-hero');
+  hero.style.background=p.bg;
+  hero.innerHTML=`<button class="modal-close" onclick="closeModal()">✕</button><span>${p.emoji}</span>${p.verified?`<div style="position:absolute;bottom:14px;left:14px;background:rgba(255,255,255,.95);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;color:var(--forest)">✓ Verified by CredibleState</div>`:''}`;
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-price">${fmt(p.price)}<span style="font-family:'Outfit',sans-serif;font-size:13px;color:var(--ink3)">/month</span></div>
+    <div style="font-size:12px;color:var(--ink3);margin-bottom:4px">Deposit: ${fmt(p.deposit)}</div>
+    <div style="font-size:17px;font-weight:600;margin:6px 0 3px">${p.name}</div>
+    <div style="font-size:13px;color:var(--ink3);margin-bottom:0">📍 ${p.area}</div>
+    <div class="modal-grid">
+      <div class="mg-stat"><div class="v">${p.beds}</div><div class="l">Bedrooms</div></div>
+      <div class="mg-stat"><div class="v">${p.sqft}</div><div class="l">Sq Ft</div></div>
+      <div class="mg-stat"><div class="v">${p.furnished?'Yes':'No'}</div><div class="l">Furnished</div></div>
+    </div>
+    <p style="font-size:13px;color:var(--ink2);line-height:1.7;margin-bottom:14px">${p.desc}</p>
+    <div style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Amenities</div>
+    <div class="amenity-wrap">${p.amenities.map(a=>`<span class="amenity-pill">${a}</span>`).join('')}</div>
+    <div class="modal-cta">
+      <button class="btn-primary" onclick="toast('📞 Owner number: +91 98765 XXXXX')">📞 Contact Owner</button>
+      <button class="btn-secondary" onclick="toast('📅 Visit scheduled for tomorrow!')">📅 Schedule Visit</button>
+    </div>
+    <p style="font-size:11px;color:var(--ink3);text-align:center;margin-top:10px">Zero brokerage · Direct owner · CredibleState verified</p>
+  `;
+  document.getElementById('modal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeModal(){
+  document.getElementById('modal').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+/* ============ MAP PAGE ============ */
+function showMapPage(){
+  document.getElementById('main-site').style.display='none';
+  document.getElementById('list-page').style.display='none';
+  document.getElementById('dash-page').style.display='none';
+  document.getElementById('map-page').style.display='block';
+  document.body.style.overflow='hidden';
+  setTimeout(initMap,100);
+}
+
+function closeMapPage(){
+  closeAllPages();
+}
+
+function initMap(){
+  if(mapInst){mapInst.invalidateSize();renderMapList(PROPS);return}
+  mapInst=L.map('leaflet-map',{zoomControl:false}).setView([17.42,78.40],12);
+  L.control.zoom({position:'bottomright'}).addTo(mapInst);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'©OpenStreetMap ©CARTO',maxZoom:19}).addTo(mapInst);
+  PROPS.forEach(p=>{
+    const m=L.marker([p.lat,p.lng],{icon:makeMapIcon(p,false)}).addTo(mapInst);
+    m.on('click',()=>mapSelect(p.id));
+    mapMarkers[p.id]=m;
+  });
+  renderMapList(PROPS);
+}
+
+function makeMapIcon(p,sel){
+  return L.divIcon({className:'',html:`<div style="background:${p.mapColor};color:#fff;padding:5px 10px;border-radius:20px;font-size:11px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.4);white-space:nowrap;cursor:pointer;transform:${sel?'scale(1.15)':'scale(1)'};position:relative">${fmt(p.price)}<div style="width:6px;height:6px;border-radius:50%;background:#fff;position:absolute;bottom:-9px;left:50%;transform:translateX(-50%)"></div></div>`,iconAnchor:[40,36]});
+}
+
+function renderMapList(list){
+  document.getElementById('map-count').textContent=`${list.length} listings`;
+  document.getElementById('map-list').innerHTML=list.map(p=>`
+    <div class="map-item ${p.id===mapSelId?'active':''}" onclick="mapSelect(${p.id})" data-mapid="${p.id}">
+      <div class="map-icon" style="background:${p.bc}">${p.emoji}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'Playfair Display',serif;font-size:16px">${fmt(p.price)} <span style="font-family:'Outfit',sans-serif;font-size:11px;color:var(--ink3)">/mo</span></div>
+        <div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+        <div style="font-size:11px;color:var(--ink3)">📍 ${p.loc}</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">
+          ${p.verified?`<span style="background:var(--forest-light);color:var(--forest);font-size:10px;font-weight:600;padding:1px 7px;border-radius:5px">✓</span>`:''}
+          <span style="background:${p.bc};color:${p.tc};font-size:10px;font-weight:600;padding:1px 7px;border-radius:5px">${p.type}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function mapSelect(id){
+  if(mapSelId&&mapMarkers[mapSelId]){const pp=PROPS.find(x=>x.id===mapSelId);if(pp)mapMarkers[mapSelId].setIcon(makeMapIcon(pp,false));}
+  mapSelId=id;
+  const p=PROPS.find(x=>x.id===id);
+  if(!p||!mapInst)return;
+  mapMarkers[id].setIcon(makeMapIcon(p,true));
+  mapInst.flyTo([p.lat,p.lng],15,{duration:0.8});
+  document.querySelectorAll('.map-item').forEach(el=>el.classList.toggle('active',el.dataset.mapid==id));
+  const el=document.querySelector(`.map-item[data-mapid="${id}"]`);
+  if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'});
+  const det=document.getElementById('map-detail');
+  det.innerHTML=`
+    <button onclick="document.getElementById('map-detail').style.display='none'" style="position:absolute;top:10px;right:10px;width:24px;height:24px;border:none;background:var(--cream2);border-radius:50%;cursor:pointer;font-size:12px">✕</button>
+    <div style="display:flex;gap:10px;align-items:flex-start">
+      <div style="width:44px;height:44px;border-radius:10px;background:${p.bc};display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">${p.emoji}</div>
+      <div><div style="font-family:'Playfair Display',serif;font-size:20px;color:var(--rust)">${fmt(p.price)}<span style="font-family:'Outfit',sans-serif;font-size:12px;color:var(--ink3)">/mo</span></div><div style="font-size:13px;font-weight:500">${p.name}</div><div style="font-size:11px;color:var(--ink3)">📍 ${p.area}</div></div>
+    </div>
+    <div style="display:flex;gap:8px;margin:12px 0 10px;flex-wrap:wrap">
+      <span style="background:var(--cream2);color:var(--ink2);padding:3px 9px;border-radius:6px;font-size:11px">${p.beds}</span>
+      <span style="background:var(--cream2);color:var(--ink2);padding:3px 9px;border-radius:6px;font-size:11px">${p.sqft} sqft</span>
+      <span style="background:var(--cream2);color:var(--ink2);padding:3px 9px;border-radius:6px;font-size:11px">${p.furnished?'Furnished':'Unfurnished'}</span>
+      ${p.verified?`<span style="background:var(--forest-light);color:var(--forest);padding:3px 9px;border-radius:6px;font-size:11px;font-weight:600">✓ Verified</span>`:''}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="btn-primary" style="font-size:12px;padding:9px" onclick="toast('📞 Owner: +91 98765 XXXXX')">📞 Contact Owner</button>
+      <button class="btn-secondary" style="font-size:12px;padding:9px" onclick="toast('📅 Visit scheduled!')">📅 Schedule Visit</button>
+    </div>
+  `;
+  det.style.display='block';
+}
+
+function mapFilter(){
+  const q=(document.getElementById('map-search-inp').value||'').toLowerCase();
+  const list=PROPS.filter(p=>{
+    const mQ=!q||p.name.toLowerCase().includes(q)||p.area.toLowerCase().includes(q)||p.loc.toLowerCase().includes(q);
+    return mQ&&(!mapActiveType||p.type===mapActiveType);
+  });
+  renderMapList(list);
+  if(!mapInst)return;
+  PROPS.forEach(p=>{
+    const show=list.find(x=>x.id===p.id);
+    if(show){if(!mapInst.hasLayer(mapMarkers[p.id]))mapMarkers[p.id].addTo(mapInst);}
+    else{if(mapInst.hasLayer(mapMarkers[p.id]))mapInst.removeLayer(mapMarkers[p.id]);}
+  });
+  if(list.length){const b=L.latLngBounds(list.map(p=>[p.lat,p.lng]));mapInst.fitBounds(b.pad(.15),{maxZoom:14});}
+}
+
+function mapChip(el){
+  const t=el.dataset.type;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');mapActiveType=t;mapFilter();
+}
+
+/* ============ LIST PAGE ============ */
+function showListPage(){
+  document.getElementById('main-site').style.display='none';
+  document.getElementById('map-page').style.display='none';
+  document.getElementById('dash-page').style.display='none';
+  document.getElementById('list-page').style.display='block';
+  document.body.style.overflow='';
+  window.scrollTo(0,0);
+}
+
+function closeListPage(){closeAllPages();}
+
+function submitListing(){
+  document.getElementById('list-success').classList.add('show');
+  toast('🎉 Submitted! We will verify and publish within 24hrs.');
+}
+
+/* ============ TENANT DASHBOARD ============ */
+function showDash(){
+  document.getElementById('main-site').style.display='none';
+  document.getElementById('map-page').style.display='none';
+  document.getElementById('list-page').style.display='none';
+  document.getElementById('dash-page').style.display='block';
+  document.body.style.overflow='';
+  window.scrollTo(0,0);
+  renderDashSaved();renderDashApps();renderDashVisits();renderDashChat();renderDashPay();renderDashDocs();
+}
+
+function goDash(id){
+  document.querySelectorAll('.dash-page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.dn-item').forEach(i=>i.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const map={
+    'd-home':0,'d-saved':1,'d-applications':2,'d-visits':4,'d-messages':5,'d-payments':7,'d-documents':8,'d-profile':10
+  };
+  const items=document.querySelectorAll('.dn-item');
+  if(map[id]!==undefined&&items[map[id]])items[map[id]].classList.add('active');
+}
+
+function renderDashSaved(){
+  const saved=PROPS.filter(p=>SAVED_IDS.includes(p.id));
+  document.getElementById('d-saved-grid').innerHTML=saved.map(p=>`
+    <div class="pcard" onclick="openModal(${p.id})">
+      <div class="pcard-img" style="background:${p.bg}">${p.emoji}<div class="pcard-type" style="background:${p.bc};color:${p.tc}">${p.type}</div>${p.verified?`<div class="pcard-verified">✓ Verified</div>`:''}<button class="pcard-fav" onclick="event.stopPropagation();toast('Removed from wishlist')">❤️</button></div>
+      <div class="pcard-body"><div class="pcard-price">${fmt(p.price)} <em>/mo</em></div><div class="pcard-name">${p.name}</div><div class="pcard-loc">📍 ${p.area}</div><div class="pcard-tags"><span class="ptag-g ptag">✓ Saved</span></div></div>
+    </div>
+  `).join('');
+}
+
+function renderDashApps(){
+  document.getElementById('d-apps-list').innerHTML=APPS.map(a=>`
+    <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px;display:flex;gap:14px">
+      <div style="font-size:32px">${a.emoji}</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:500">${a.name}</div>
+        <div style="font-size:12px;color:var(--ink3);margin:3px 0 10px">📍 ${a.loc} · ${fmt(a.price)}/mo</div>
+        <div style="display:flex;gap:0">
+          ${a.steps.map((s,i)=>`
+            <div style="flex:1;text-align:center;position:relative">
+              ${i>0?`<div style="position:absolute;top:9px;left:-50%;width:100%;height:2px;background:${i<=a.step?'var(--forest)':'var(--border)'};z-index:0"></div>`:''}
+              <div style="width:20px;height:20px;border-radius:50%;background:${i<a.step?'var(--forest)':i===a.step?'var(--rust)':'#fff'};border:2px solid ${i<a.step?'var(--forest)':i===a.step?'var(--rust)':'var(--border)'};margin:0 auto 5px;position:relative;z-index:1;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff">${i<a.step?'✓':i===a.step?'●':''}</div>
+              <div style="font-size:9px;color:${i<=a.step?'var(--ink)':'var(--ink3)'};font-weight:500">${s}</div>
+            </div>
+          `).join('')}
+        </div>
+        ${a.status==='approved'?`<button class="btn-sm btn-sm-p" style="margin-top:12px" onclick="goDash('d-documents')">Sign Rent Agreement →</button>`:''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderDashVisits(){
+  const vc=v=>`
+    <div class="visit-c">
+      <div class="v-date" style="background:${v.status==='upcoming'?'var(--rust-light)':'var(--cream2)'};color:${v.status==='upcoming'?'var(--rust)':'var(--ink3)'}">
+        <div class="vd">${v.day}</div><div class="vm">${v.mon}</div>
+      </div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">${v.emoji}</span><div>
+          <div style="font-size:13px;font-weight:500">${v.name}</div>
+          <div style="font-size:11px;color:var(--ink3)">📍 ${v.loc}</div>
+          <div style="font-size:12px;font-weight:500;color:${v.status==='upcoming'?'var(--rust)':'var(--ink3)'}">🕐 ${v.time} · with ${v.contact}</div>
+        </div></div>
+        ${v.status==='upcoming'?`<div style="display:flex;gap:6px;margin-top:8px"><button class="btn-sm" onclick="toast('Visit cancelled')">Cancel</button><button class="btn-sm btn-sm-p" onclick="toast('Reschedule opened')">Reschedule</button></div>`:''}
+      </div>
+      <div class="v-status ${v.status==='upcoming'?'vs-up':v.status==='done'?'vs-done':'vs-can'}">${v.status}</div>
+    </div>
+  `;
+  document.getElementById('d-visits-up').innerHTML=VISITS.filter(v=>v.status==='upcoming').map(vc).join('');
+  document.getElementById('d-visits-past').innerHTML=VISITS.filter(v=>v.status!=='upcoming').map(vc).join('');
+}
+
+function renderDashChat(){
+  document.getElementById('d-chat-list').innerHTML=CHATS.map(c=>`
+    <div class="chat-item ${c.id===activeChatId?'active':''}" onclick="selectChat(${c.id})">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
+        <div class="chat-win-av" style="width:26px;height:26px;font-size:10px;background:${c.color}">${c.name[0]}</div>
+        <div class="chat-item-name">${c.name}</div>
+        <div class="chat-item-time">${c.time}</div>
+      </div>
+      <div class="chat-item-prev" style="padding-left:33px">${c.msgs[c.msgs.length-1].text}</div>
+      ${c.unread?`<div class="chat-item-unread">${c.unread}</div>`:''}
+    </div>
+  `).join('');
+  selectChat(activeChatId,false);
+}
+
+function selectChat(id,rerender=true){
+  activeChatId=id;
+  const c=CHATS.find(x=>x.id===id);c.unread=0;
+  if(rerender)renderDashChat();
+  document.getElementById('d-chat-head').innerHTML=`
+    <div class="chat-win-av" style="background:${c.color}">${c.name[0]}</div>
+    <div><div style="font-size:13px;font-weight:600">${c.name}</div><div style="font-size:11px;color:var(--ink3)">${c.prop}</div></div>
+    <div style="margin-left:auto;display:flex;gap:6px">
+      <button class="btn-sm" onclick="toast('Calling ${c.name}...')">📞</button>
+      <button class="btn-sm" onclick="toast('Viewing property...')">🏠</button>
+    </div>
+  `;
+  const msgs=document.getElementById('d-chat-msgs');
+  msgs.innerHTML=c.msgs.map(m=>`<div><div class="msg ${m.out?'msg-out':'msg-in'}">${m.text}<div class="msg-time">${m.time}</div></div></div>`).join('');
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function dSendMsg(){
+  const inp=document.getElementById('d-msg-inp');
+  const text=inp.value.trim();if(!text)return;
+  const c=CHATS.find(x=>x.id===activeChatId);
+  c.msgs.push({out:true,text,time:'Just now'});inp.value='';
+  selectChat(activeChatId,false);
+  const r=['Got it! I will check and let you know.','Sure, that works for me.','Thanks for the update!','I will send you the details shortly.'];
+  setTimeout(()=>{c.msgs.push({out:false,text:r[Math.floor(Math.random()*r.length)],time:'Just now'});selectChat(activeChatId,false);},1200);
+}
+
+function renderDashPay(){
+  document.getElementById('d-pay-tbl').innerHTML=`
+    <thead><tr><th>Month</th><th>Amount</th><th>Due Date</th><th>Reference</th><th>Status</th><th></th></tr></thead>
+    <tbody>${PAYMENTS.map(p=>`<tr>
+      <td style="font-weight:500">${p.month}</td>
+      <td style="font-family:'Playfair Display',serif;font-size:16px">${fmt(p.amount)}</td>
+      <td style="color:var(--ink3);font-size:12px">${p.date}</td>
+      <td style="color:var(--ink3);font-size:11px;font-family:monospace">${p.id}</td>
+      <td><span class="pay-status ${p.status==='paid'?'ps-paid':'ps-due'}">${p.status==='paid'?'✓ Paid':'⚠ Due'}</span></td>
+      <td><button class="btn-sm ${p.status==='due'?'btn-sm-p':''}" style="font-size:11px;padding:5px 10px" onclick="toast('${p.status==='paid'?'Downloading receipt...':'Opening payment...'}')">${p.status==='paid'?'Receipt':'Pay Now'}</button></td>
+    </tr>`).join('')}</tbody>
+  `;
+}
+
+function renderDashDocs(){
+  document.getElementById('d-doc-grid').innerHTML=DOCS.map(d=>`
+    <div class="doc-c" onclick="toast('Opening ${d.name}...')">
+      <div class="doc-ic">${d.icon}</div>
+      <div class="doc-nm">${d.name}</div>
+      <div class="doc-meta">${d.meta}</div>
+      <div style="display:inline-block;margin-top:8px;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;${d.status==='verified'?'background:var(--forest-light);color:var(--forest)':'background:var(--sky-light);color:var(--sky)'}">${d.status==='verified'?'✓ Verified':'Pending'}</div>
+    </div>
+  `).join('');
+}
+
+/* ============ INIT ============ */
+renderCards(PROPS);
+
+// Smooth reveal on scroll
+const observer=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)';}});
+},{threshold:.1});
+document.querySelectorAll('.how-card,.why-card,.testi-card').forEach(el=>{
+  el.style.opacity='0';el.style.transform='translateY(20px)';el.style.transition='opacity .5s ease, transform .5s ease';
+  observer.observe(el);
+});
+</script>
+</body>
+</html>
