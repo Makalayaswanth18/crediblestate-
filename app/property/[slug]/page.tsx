@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { supabase, type Property } from '@/lib/supabase'
 import PropertyCard from '@/components/PropertyCard'
+import InquiryForm from '@/components/InquiryForm'
 import { formatPrice, buildWaLink } from '@/lib/format'
 
 export const revalidate = 300 // 5 min
@@ -24,7 +25,7 @@ export default async function PropertyDetail({
 
   const p = property as Property
 
-  // Similar properties — same listing type and locality
+  // Similar properties — same listing type
   const { data: similarRaw } = await supabase
     .from('properties')
     .select('*')
@@ -34,10 +35,12 @@ export default async function PropertyDetail({
     .limit(3)
 
   const similar = (similarRaw as Property[]) || []
+  const heroImg = p.images && p.images.length > 0 ? p.images[0] : null
+  const galleryImgs = p.images && p.images.length > 1 ? p.images.slice(1, 5) : []
 
   return (
     <>
-      {/* Header / Image */}
+      {/* Header */}
       <section
         style={{
           background: 'linear-gradient(160deg,#1A120A,#2C1A0E,#0E2218)',
@@ -54,37 +57,49 @@ export default async function PropertyDetail({
             <span style={{ color: '#fff' }}>{p.title}</span>
           </nav>
 
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', flexWrap: 'wrap' }}>
             <span style={{ background: 'rgba(30,77,53,0.92)', padding: '5px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em' }}>✓ VERIFIED</span>
             <span style={{ background: p.listing_type === 'rent' ? 'rgba(184,74,30,0.92)' : 'rgba(30,77,53,0.92)', padding: '5px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em' }}>
               FOR {p.listing_type.toUpperCase()}
             </span>
           </div>
 
-          <h1 style={{ fontFamily: 'var(--font-playfair), serif', fontSize: 'clamp(30px,5vw,48px)', fontWeight: 400, lineHeight: 1.1, marginBottom: '12px', letterSpacing: '-0.01em' }}>
+          <h1 style={{ fontFamily: 'var(--font-playfair), serif', fontSize: 'clamp(24px,5vw,42px)', fontWeight: 400, lineHeight: 1.15, marginBottom: '12px', letterSpacing: '-0.01em' }}>
             {p.title}
           </h1>
-          <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.7)', marginBottom: '32px' }}>
+          <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.7)', marginBottom: '32px' }}>
             📍 {p.address || `${p.locality}, ${p.city}`}
           </p>
 
-          {/* Hero image area */}
-          <div style={{ height: '420px', borderRadius: '20px', background: 'linear-gradient(135deg,#2C1A0E,#1A120A)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', marginBottom: '-60px' }}>
-            {p.images && p.images.length > 0 ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={p.images[0]} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : (
-              <span style={{ fontSize: '120px', opacity: 0.3 }}>
-                {p.property_type === 'villa' ? '🏡' : p.property_type === 'pg' ? '🛏️' : p.property_type === 'plot' ? '🌳' : p.property_type === 'commercial' ? '🏬' : '🏢'}
-              </span>
+          {/* Image gallery */}
+          <div style={{ display: 'grid', gridTemplateColumns: galleryImgs.length > 0 ? '2fr 1fr' : '1fr', gap: '8px', marginBottom: '-60px' }}>
+            <div style={{ aspectRatio: '16/10', borderRadius: '20px', background: 'linear-gradient(135deg,#2C1A0E,#1A120A)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {heroImg ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={heroImg} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <span style={{ fontSize: '120px', opacity: 0.3 }}>
+                  {p.property_type === 'villa' ? '🏡' : p.property_type === 'pg' ? '🛏️' : p.property_type === 'plot' ? '🌳' : p.property_type === 'commercial' ? '🏬' : '🏢'}
+                </span>
+              )}
+            </div>
+            {galleryImgs.length > 0 && (
+              <div style={{ display: 'grid', gridTemplateRows: 'repeat(2, 1fr)', gap: '8px' }}>
+                {galleryImgs.slice(0, 2).map((img, i) => (
+                  <div key={i} style={{ borderRadius: '16px', overflow: 'hidden', background: '#1A120A' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </div>
       </section>
 
       {/* Body */}
-      <section style={{ padding: '100px 5vw 80px', background: '#FAF7F2' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'minmax(0,2fr) minmax(280px,1fr)', gap: '40px', alignItems: 'start' }}>
+      <section style={{ padding: '100px 5vw 120px', background: '#FAF7F2' }}>
+        <div className="property-grid" style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'minmax(0,2fr) minmax(280px,1fr)', gap: '40px', alignItems: 'start' }}>
 
           {/* LEFT — Details */}
           <div>
@@ -133,8 +148,8 @@ export default async function PropertyDetail({
             </div>
           </div>
 
-          {/* RIGHT — Contact card (sticky) */}
-          <aside style={{ position: 'sticky', top: '84px', background: '#fff', padding: '24px', borderRadius: '20px', border: '0.5px solid #DDD7CF', boxShadow: '0 16px 48px rgba(0,0,0,0.08)' }}>
+          {/* RIGHT — Contact card */}
+          <aside className="property-aside" style={{ position: 'sticky', top: '84px', background: '#fff', padding: '24px', borderRadius: '20px', border: '0.5px solid #DDD7CF', boxShadow: '0 16px 48px rgba(0,0,0,0.08)' }}>
             <div style={{ marginBottom: '20px', paddingBottom: '20px', borderBottom: '0.5px solid #EEEAE3' }}>
               <div style={{ fontSize: '12px', color: '#9C9488', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600, marginBottom: '6px' }}>Listed by</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -143,7 +158,7 @@ export default async function PropertyDetail({
                 </div>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: '15px' }}>{p.agent_name || 'Verified Agent'}</div>
-                  <div style={{ fontSize: '12px', color: '#9C9488' }}>⭐ Verified · Responds quickly</div>
+                  <div style={{ fontSize: '12px', color: '#9C9488' }}>⭐ Verified · Responds in 4h</div>
                 </div>
               </div>
             </div>
@@ -165,7 +180,9 @@ export default async function PropertyDetail({
               </a>
             )}
 
-            <div style={{ background: '#FBF0EB', borderRadius: '12px', padding: '14px', fontSize: '12px', color: '#4A4238', lineHeight: 1.55 }}>
+            <InquiryForm propertyId={p.id} propertyTitle={p.title} />
+
+            <div style={{ background: '#FBF0EB', borderRadius: '12px', padding: '14px', fontSize: '12px', color: '#4A4238', lineHeight: 1.55, marginTop: '14px' }}>
               <strong style={{ color: '#B84A1E' }}>🛡️ CredibleState Promise:</strong> This listing is physically verified. Owner responds within 4 hours. Zero brokerage charged.
             </div>
           </aside>
@@ -183,6 +200,44 @@ export default async function PropertyDetail({
           </div>
         )}
       </section>
+
+      {/* MOBILE STICKY CTA BAR */}
+      <div className="mobile-cta-bar" style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: '#fff',
+        borderTop: '0.5px solid #DDD7CF',
+        padding: '12px 16px',
+        display: 'none',
+        gap: '8px',
+        zIndex: 50,
+        boxShadow: '0 -8px 24px rgba(0,0,0,0.1)',
+      }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily: 'var(--font-playfair), serif', fontSize: '20px', fontWeight: 400, color: '#100E0B', lineHeight: 1 }}>
+            {formatPrice(Number(p.price))}<span style={{ fontSize: '12px', color: '#9C9488' }}>{p.listing_type === 'rent' ? '/mo' : ''}</span>
+          </div>
+          <div style={{ fontSize: '11px', color: '#9C9488' }}>{p.locality} · {p.bedrooms ? `${p.bedrooms} BHK` : p.property_type}</div>
+        </div>
+        {p.phone && (
+          <a href={`tel:${p.phone}`} style={{ background: '#100E0B', color: '#fff', padding: '10px 14px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            📞
+          </a>
+        )}
+        <a href={buildWaLink(p.whatsapp || p.phone, p.title)} target="_blank" rel="noopener noreferrer" style={{ background: '#25D366', color: '#fff', padding: '10px 18px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}>
+          💬 WhatsApp
+        </a>
+      </div>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .property-grid { grid-template-columns: 1fr !important; }
+          .property-aside { position: static !important; }
+          .mobile-cta-bar { display: flex !important; }
+        }
+      `}</style>
     </>
   )
 }

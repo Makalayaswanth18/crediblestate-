@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { submitProperty, type ListResult } from './actions'
+import ImageUpload from '@/components/ImageUpload'
 
 export default function ListPage() {
   const [submitting, setSubmitting] = useState(false)
@@ -93,6 +94,10 @@ export default function ListPage() {
               <Field label="City" name="city" defaultValue="Hyderabad" />
             </Row>
             <Field label="Full address (kept private until inquiry)" name="address" placeholder="Building name, street, pincode" />
+          </Section>
+
+          <Section title="Photos">
+            <ImageUpload />
           </Section>
 
           <Section title="Highlights">
