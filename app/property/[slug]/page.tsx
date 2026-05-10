@@ -4,7 +4,7 @@ import { supabase, type Property } from '@/lib/supabase'
 import PropertyCard from '@/components/PropertyCard'
 import { formatPrice, buildWaLink } from '@/lib/format'
 
-export const revalidate = 60
+export const revalidate = 300 // 5 min
 
 export default async function PropertyDetail({
   params,

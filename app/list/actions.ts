@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { supabase } from '@/lib/supabase'
+import { createSupabaseServerClient } from '@/lib/supabase-server'
 
 function slugify(s: string): string {
   return s
@@ -40,6 +41,10 @@ export async function submitProperty(formData: FormData): Promise<ListResult> {
 
   const slug = `${slugify(title)}-${Date.now().toString().slice(-5)}`
 
+  // If agent is logged in, link the listing to them
+  const ssr = await createSupabaseServerClient()
+  const { data: { user } } = await ssr.auth.getUser()
+
   const { error } = await supabase.from('properties').insert({
     slug,
     title,
@@ -62,6 +67,7 @@ export async function submitProperty(formData: FormData): Promise<ListResult> {
     phone,
     whatsapp,
     status: 'pending',
+    agent_id: user?.id || null,
   })
 
   if (error) {

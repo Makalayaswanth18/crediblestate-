@@ -1,6 +1,11 @@
 import Link from 'next/link'
+import { createSupabaseServerClient, isAdmin } from '@/lib/supabase-server'
 
-export default function Nav() {
+export default async function Nav() {
+  const supabase = await createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const userIsAdmin = isAdmin(user?.email)
+
   return (
     <nav
       style={{
@@ -35,20 +40,45 @@ export default function Nav() {
       <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
         <Link href="/rent" style={navLink}>Browse</Link>
         <Link href="/about" style={navLink}>About</Link>
-        <Link
-          href="/list"
-          style={{
-            background: '#B84A1E',
-            color: '#fff',
-            padding: '9px 22px',
-            borderRadius: '24px',
-            fontWeight: 600,
-            fontSize: '13px',
-            textDecoration: 'none',
-          }}
-        >
-          List Property Free
-        </Link>
+
+        {userIsAdmin && (
+          <Link href="/admin/pending" style={{ ...navLink, color: '#E8732F' }}>Admin</Link>
+        )}
+
+        {user ? (
+          <Link
+            href="/agent/dashboard"
+            style={{
+              background: '#fff',
+              color: '#100E0B',
+              padding: '9px 20px',
+              borderRadius: '24px',
+              fontWeight: 600,
+              fontSize: '13px',
+              textDecoration: 'none',
+            }}
+          >
+            Dashboard
+          </Link>
+        ) : (
+          <>
+            <Link href="/agent/login" style={navLink}>Sign in</Link>
+            <Link
+              href="/list"
+              style={{
+                background: '#B84A1E',
+                color: '#fff',
+                padding: '9px 22px',
+                borderRadius: '24px',
+                fontWeight: 600,
+                fontSize: '13px',
+                textDecoration: 'none',
+              }}
+            >
+              List Property Free
+            </Link>
+          </>
+        )}
       </div>
     </nav>
   )

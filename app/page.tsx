@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { supabase, type Property } from '@/lib/supabase'
 import PropertyCard from '@/components/PropertyCard'
 
-export const revalidate = 60
+export const revalidate = 300 // 5 min — homepage doesn't need to be ultra-fresh
 
 export default async function HomePage() {
   let properties: Property[] = []

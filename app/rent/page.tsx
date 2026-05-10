@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { supabase, type Property } from '@/lib/supabase'
 import PropertyCard from '@/components/PropertyCard'
 
-export const revalidate = 30
+export const revalidate = 120 // 2 min
 
 type SearchParams = {
   q?: string
