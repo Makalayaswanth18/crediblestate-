@@ -1,58 +1,74 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const ADMIN_EMAILS = ['yaswanthganesh39@gmail.com']
 
 export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
+  // Defensive: never let middleware crash the whole site.
+  // If Supabase isn't reachable, just allow the request through.
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey =
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  const supabase = createServerClient(supabaseUrl, supabaseKey, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll()
-      },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-        supabaseResponse = NextResponse.next({ request })
-        cookiesToSet.forEach(({ name, value, options }) =>
-          supabaseResponse.cookies.set(name, value, options),
-        )
-      },
-    },
-  })
-
-  // Refresh expiring auth tokens
-  const { data: { user } } = await supabase.auth.getUser()
-
-  // Protect agent routes
-  if (request.nextUrl.pathname.startsWith('/agent') && !request.nextUrl.pathname.startsWith('/agent/login')) {
-    if (!user) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/agent/login'
-      url.searchParams.set('next', request.nextUrl.pathname)
-      return NextResponse.redirect(url)
+    // If env vars aren't set, fall through (auth is broken but site works)
+    if (!supabaseUrl || !supabaseKey) {
+      return NextResponse.next({ request })
     }
-  }
 
-  // Protect admin routes
-  if (request.nextUrl.pathname.startsWith('/admin')) {
-    const ADMIN_EMAILS = ['yaswanthganesh39@gmail.com']
-    if (!user || !user.email || !ADMIN_EMAILS.includes(user.email)) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/agent/login'
-      url.searchParams.set('next', request.nextUrl.pathname)
-      return NextResponse.redirect(url)
+    let supabaseResponse = NextResponse.next({ request })
+
+    const supabase = createServerClient(supabaseUrl, supabaseKey, {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          supabaseResponse = NextResponse.next({ request })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options),
+          )
+        },
+      },
+    })
+
+    // Refresh expiring auth tokens
+    const { data: { user } } = await supabase.auth.getUser()
+
+    const path = request.nextUrl.pathname
+
+    // Protect agent routes (except login)
+    if (path.startsWith('/agent') && !path.startsWith('/agent/login')) {
+      if (!user) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/agent/login'
+        url.searchParams.set('next', path)
+        return NextResponse.redirect(url)
+      }
     }
-  }
 
-  return supabaseResponse
+    // Protect admin routes
+    if (path.startsWith('/admin')) {
+      if (!user || !user.email || !ADMIN_EMAILS.includes(user.email)) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/agent/login'
+        url.searchParams.set('next', path)
+        return NextResponse.redirect(url)
+      }
+    }
+
+    return supabaseResponse
+  } catch (err) {
+    // Log + pass through. Never crash the site over middleware issues.
+    console.error('[middleware] error, passing through:', err)
+    return NextResponse.next({ request })
+  }
 }
 
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
+  // Only run middleware where it actually matters.
+  // Public pages don't need auth checks.
+  matcher: ['/agent/:path*', '/admin/:path*', '/auth/:path*'],
 }
