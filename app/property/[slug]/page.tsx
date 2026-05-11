@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { supabase, type Property } from '@/lib/supabase'
 import PropertyCard from '@/components/PropertyCard'
 import InquiryForm from '@/components/InquiryForm'
+import PropertyMap from '@/components/PropertyMap'
 import { formatPrice, buildWaLink } from '@/lib/format'
 
 export const revalidate = 300 // 5 min
@@ -213,7 +214,7 @@ export default async function PropertyDetail({
             )}
 
             {/* Features */}
-            <div style={{ background: '#fff', padding: '32px', borderRadius: '16px', border: '0.5px solid #DDD7CF' }}>
+            <div style={{ background: '#fff', padding: '32px', borderRadius: '16px', border: '0.5px solid #DDD7CF', marginBottom: '24px' }}>
               <h2 style={sectionHeading}>Property highlights</h2>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 {p.has_parking && <Highlight>🚗 Parking</Highlight>}
@@ -223,6 +224,13 @@ export default async function PropertyDetail({
                 <Highlight>₹0 Brokerage</Highlight>
               </div>
             </div>
+
+            {/* Map */}
+            <PropertyMap
+              locality={p.locality}
+              city={p.city}
+              address={p.address}
+            />
           </div>
 
           {/* RIGHT — Contact card */}
