@@ -12,6 +12,7 @@ type SearchParams = {
   bhk?: string
   min?: string
   max?: string
+  sort?: string
 }
 
 export default async function RentPage({
@@ -21,11 +22,19 @@ export default async function RentPage({
 }) {
   const params = await searchParams
 
+  // Determine sort order
+  let sortField: string = 'created_at'
+  let sortAsc = false
+  if (params.sort === 'price-low') { sortField = 'price'; sortAsc = true }
+  else if (params.sort === 'price-high') { sortField = 'price'; sortAsc = false }
+  else if (params.sort === 'newest') { sortField = 'created_at'; sortAsc = false }
+  else if (params.sort === 'oldest') { sortField = 'created_at'; sortAsc = true }
+
   let query = supabase
     .from('properties')
     .select('*')
     .eq('status', 'verified')
-    .order('created_at', { ascending: false })
+    .order(sortField, { ascending: sortAsc })
 
   if (params.type === 'rent' || params.type === 'sale') {
     query = query.eq('listing_type', params.type)
@@ -107,6 +116,13 @@ export default async function RentPage({
             </select>
             <input name="min" defaultValue={params.min || ''} placeholder="Min price (₹)" style={inputStyle} type="number" />
             <input name="max" defaultValue={params.max || ''} placeholder="Max price (₹)" style={inputStyle} type="number" />
+            <select name="sort" defaultValue={params.sort || ''} style={inputStyle}>
+              <option value="">Sort: Newest first</option>
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+            </select>
             <button
               type="submit"
               style={{

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createSupabaseServerClient, isAdmin } from '@/lib/supabase-server'
+import MobileMenu from './MobileMenu'
 
 export default async function Nav() {
   const supabase = await createSupabaseServerClient()
@@ -37,8 +38,10 @@ export default async function Nav() {
         Credible<span style={{ color: 'rgba(255,255,255,0.55)', fontWeight: 400 }}>State</span>
       </Link>
 
-      <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+      {/* Desktop nav */}
+      <div className="nav-desktop" style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
         <Link href="/rent" style={navLink}>Browse</Link>
+        <Link href="/favorites" style={navLink}>Saved</Link>
         <Link href="/about" style={navLink}>About</Link>
 
         {userIsAdmin && (
@@ -80,6 +83,18 @@ export default async function Nav() {
           </>
         )}
       </div>
+
+      {/* Mobile hamburger */}
+      <MobileMenu user={user ? { email: user.email || '' } : null} isAdmin={userIsAdmin} />
+
+      <style>{`
+        @media (max-width: 768px) {
+          .nav-desktop { display: none !important; }
+        }
+        @media (min-width: 769px) {
+          .nav-mobile-trigger { display: none !important; }
+        }
+      `}</style>
     </nav>
   )
 }
