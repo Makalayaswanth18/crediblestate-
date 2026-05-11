@@ -23,6 +23,15 @@ export default function Footer() {
           </div>
 
           <div>
+            <h4 style={footerHeading}>Top Localities</h4>
+            <Link href="/rent/kondapur" style={footerLink}>Kondapur</Link>
+            <Link href="/rent/gachibowli" style={footerLink}>Gachibowli</Link>
+            <Link href="/rent/madhapur" style={footerLink}>Madhapur</Link>
+            <Link href="/rent/banjara-hills" style={footerLink}>Banjara Hills</Link>
+            <Link href="/rent/financial-district" style={footerLink}>Financial District</Link>
+          </div>
+
+          <div>
             <h4 style={footerHeading}>For Owners</h4>
             <Link href="/list" style={footerLink}>List Property Free</Link>
             <Link href="/about" style={footerLink}>How Verification Works</Link>

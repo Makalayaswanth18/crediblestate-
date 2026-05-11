@@ -1,11 +1,60 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
 import { supabase, type Property } from '@/lib/supabase'
 import PropertyCard from '@/components/PropertyCard'
 import InquiryForm from '@/components/InquiryForm'
 import { formatPrice, buildWaLink } from '@/lib/format'
 
 export const revalidate = 300 // 5 min
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+  const { data } = await supabase
+    .from('properties')
+    .select('title, description, locality, city, price, listing_type, bedrooms, area_sqft, images, property_type')
+    .eq('slug', slug)
+    .eq('status', 'verified')
+    .single()
+
+  if (!data) return { title: 'Property — CredibleState' }
+
+  const p = data as Property
+  const priceStr =
+    p.price >= 10_000_000 ? `₹${(p.price / 10_000_000).toFixed(1)} Cr` :
+    p.price >= 100_000   ? `₹${(p.price / 100_000).toFixed(1)} L` :
+    `₹${p.price.toLocaleString('en-IN')}`
+  const suffix = p.listing_type === 'rent' ? '/mo' : ''
+
+  const title = `${p.title} — ${priceStr}${suffix} · ${p.locality}, ${p.city}`
+  const desc = p.description?.slice(0, 155) ||
+    `Verified ${p.bedrooms ? `${p.bedrooms} BHK ` : ''}${p.property_type} for ${p.listing_type} in ${p.locality}, ${p.city}. ${priceStr}${suffix}. Zero brokerage on CredibleState.`
+
+  return {
+    title,
+    description: desc,
+    keywords: [
+      `${p.locality} ${p.bedrooms ? `${p.bedrooms} BHK` : p.property_type}`,
+      `${p.locality} ${p.listing_type}`,
+      `${p.locality} ${p.property_type}`,
+      `${p.bedrooms ? `${p.bedrooms} BHK` : ''} ${p.city}`.trim(),
+      `verified property ${p.city}`,
+      'zero brokerage Hyderabad',
+    ],
+    openGraph: {
+      title,
+      description: desc,
+      url: `https://crediblestate.com/property/${slug}`,
+      type: 'article',
+      images: p.images && p.images.length > 0 ? [{ url: p.images[0], width: 1200, height: 630 }] : [],
+    },
+    alternates: { canonical: `https://crediblestate.com/property/${slug}` },
+  }
+}
 
 export default async function PropertyDetail({
   params,
@@ -38,8 +87,36 @@ export default async function PropertyDetail({
   const heroImg = p.images && p.images.length > 0 ? p.images[0] : null
   const galleryImgs = p.images && p.images.length > 1 ? p.images.slice(1, 5) : []
 
+  // JSON-LD structured data for rich Google results
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': p.listing_type === 'rent' ? 'RealEstateListing' : 'Product',
+    name: p.title,
+    description: p.description || `${p.bedrooms ? `${p.bedrooms} BHK ` : ''}${p.property_type} for ${p.listing_type} in ${p.locality}, ${p.city}`,
+    url: `https://crediblestate.com/property/${p.slug}`,
+    image: p.images && p.images.length > 0 ? p.images : undefined,
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: p.locality,
+      addressRegion: 'Telangana',
+      addressCountry: 'IN',
+    },
+    offers: {
+      '@type': 'Offer',
+      price: p.price,
+      priceCurrency: 'INR',
+      availability: 'https://schema.org/InStock',
+    },
+    numberOfRooms: p.bedrooms ?? undefined,
+    floorSize: p.area_sqft ? { '@type': 'QuantitativeValue', value: p.area_sqft, unitCode: 'FTK' } : undefined,
+  }
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Header */}
       <section
         style={{
