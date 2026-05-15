@@ -1,6 +1,26 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 
+// Auth callbacks set session cookies. They must NEVER be cached — by Next's
+// data cache, by Vercel, or by Cloudflare. We belt-and-braces this:
+//   - `dynamic = 'force-dynamic'` opts out of Next's static optimization
+//   - explicit Cache-Control headers on every response
+//   - next.config.ts also sets CDN-Cache-Control: private, no-store on /auth/*
+export const dynamic = 'force-dynamic'
+
+const NO_STORE_HEADERS = {
+  'Cache-Control': 'private, no-store, max-age=0, must-revalidate',
+  'CDN-Cache-Control': 'private, no-store',
+}
+
+function redirectWithNoStore(url: URL): NextResponse {
+  const res = NextResponse.redirect(url)
+  for (const [k, v] of Object.entries(NO_STORE_HEADERS)) {
+    res.headers.set(k, v)
+  }
+  return res
+}
+
 export async function GET(request: NextRequest) {
   const url = new URL(request.url)
   const code = url.searchParams.get('code')
@@ -8,14 +28,14 @@ export async function GET(request: NextRequest) {
   const intent = url.searchParams.get('intent')
 
   if (!code) {
-    return NextResponse.redirect(new URL('/signin?error=callback_failed', url.origin))
+    return redirectWithNoStore(new URL('/signin?error=callback_failed', url.origin))
   }
 
   const supabase = await createSupabaseServerClient()
   const { error } = await supabase.auth.exchangeCodeForSession(code)
   if (error) {
     console.error('Magic link callback failed:', error)
-    return NextResponse.redirect(new URL('/signin?error=callback_failed', url.origin))
+    return redirectWithNoStore(new URL('/signin?error=callback_failed', url.origin))
   }
 
   // Read the freshly-signed-in user and their profile, then apply intent if needed.
@@ -23,8 +43,6 @@ export async function GET(request: NextRequest) {
   let role: 'buyer' | 'agent' = 'buyer'
 
   if (user) {
-    // Profile is auto-created by handle_new_user() trigger, but we read with
-    // maybeSingle and fall back to insert in case it raced.
     const { data: profile } = await supabase
       .from('profiles')
       .select('id, role')
@@ -42,9 +60,6 @@ export async function GET(request: NextRequest) {
     } else {
       role = (profile.role as 'buyer' | 'agent') ?? 'buyer'
 
-      // If this is a returning user who arrived via the agent flow but is
-      // currently flagged as buyer, upgrade them (one-way only — agents can't
-      // be downgraded silently because of the profiles_guard trigger).
       if (intent === 'agent' && role !== 'agent') {
         await supabase.from('profiles').update({ role: 'agent' }).eq('id', user.id)
         role = 'agent'
@@ -52,12 +67,15 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Where to send them
+  // Where to send them:
+  //   - explicit ?next= wins (e.g., they were trying to read /messages/<id>)
+  //   - agents → /agent/dashboard
+  //   - buyers → home (then they can browse listings; account/messages live in nav)
   const destination = next
     ? next
     : role === 'agent'
       ? '/agent/dashboard'
-      : '/account'
+      : '/'
 
-  return NextResponse.redirect(new URL(destination, url.origin))
+  return redirectWithNoStore(new URL(destination, url.origin))
 }

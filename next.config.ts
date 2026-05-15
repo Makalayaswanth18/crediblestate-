@@ -43,6 +43,12 @@ const nextConfig: NextConfig = {
       { source: '/agent/messages/:path*',             headers: [{ key: 'CDN-Cache-Control', value: NO_CDN_CACHE }] },
       { source: '/admin/:path*',                      headers: [{ key: 'CDN-Cache-Control', value: NO_CDN_CACHE }] },
       { source: '/signin',                            headers: [{ key: 'CDN-Cache-Control', value: NO_CDN_CACHE }] },
+      // Auth + API routes set session cookies — they MUST NOT be cached at the edge.
+      // Cloudflare would otherwise cache the 302 from /auth/callback?code=xxx and
+      // subsequent magic-link clicks would skip the route handler entirely,
+      // landing at /account with no session and looping back to /signin.
+      { source: '/auth/:path*',                       headers: [{ key: 'CDN-Cache-Control', value: NO_CDN_CACHE }] },
+      { source: '/api/:path*',                        headers: [{ key: 'CDN-Cache-Control', value: NO_CDN_CACHE }] },
     ]
   },
 };
