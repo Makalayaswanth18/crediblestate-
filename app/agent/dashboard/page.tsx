@@ -23,19 +23,20 @@ export default async function AgentDashboard() {
   const verified = listings.filter(l => l.status === 'verified')
   const archived = listings.filter(l => l.status === 'rejected' || l.status === 'rented' || l.status === 'sold')
 
-  // Inquiry counts per listing
+  // Conversation counts per listing (one row per buyer thread).
+  // Note: this replaces the old inquiries-table count — see migration 004.
   const ids = listings.map(l => l.id)
   let inquiryCounts: Record<string, number> = {}
   if (ids.length > 0) {
-    const { data: inq } = await supabase
-      .from('inquiries')
+    const { data: convs } = await supabase
+      .from('conversations')
       .select('property_id')
       .in('property_id', ids)
-    if (inq) {
-      inquiryCounts = inq.reduce((acc: Record<string, number>, row: { property_id: string }) => {
+    if (convs) {
+      inquiryCounts = (convs as { property_id: string }[]).reduce((acc, row) => {
         acc[row.property_id] = (acc[row.property_id] || 0) + 1
         return acc
-      }, {})
+      }, {} as Record<string, number>)
     }
   }
 
@@ -92,7 +93,7 @@ export default async function AgentDashboard() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
                 <h2 style={{ fontFamily: 'var(--font-playfair), serif', fontSize: '26px', fontWeight: 400 }}>Your listings</h2>
                 <div style={{ display: 'flex', gap: '10px' }}>
-                  <Link href="/agent/inquiries" style={smallBtn}>📩 Inquiries</Link>
+                  <Link href="/agent/messages" style={smallBtn}>📩 Messages</Link>
                   <Link href="/list" style={{ ...smallBtn, background: '#B84A1E', color: '#fff', borderColor: '#B84A1E' }}>+ New Listing</Link>
                 </div>
               </div>

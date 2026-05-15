@@ -13,7 +13,12 @@ function timeAgo(date: string): string {
   return `${Math.floor(days / 30)} month${Math.floor(days / 30) === 1 ? '' : 's'} ago`
 }
 
-export default function PropertyCard({ p }: { p: Property }) {
+/**
+ * A property card can optionally be told whether the listing's agent is KYC-verified.
+ * Callers that join `profiles` into their property query should pass this through;
+ * otherwise we just rely on the existing "✓ VERIFIED" listing badge.
+ */
+export default function PropertyCard({ p, isAgentVerified }: { p: Property; isAgentVerified?: boolean }) {
   const isFresh = (Date.now() - new Date(p.created_at).getTime()) < 7 * 24 * 60 * 60 * 1000
 
   return (
@@ -107,8 +112,13 @@ export default function PropertyCard({ p }: { p: Property }) {
             {p.is_gated && <span style={{ ...chip, background: '#EBF5EF', color: '#1E4D35' }}>Gated</span>}
             {p.is_furnished && <span style={chip}>Furnished</span>}
           </div>
-          <div style={{ fontSize: '11px', color: '#9C9488', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span>by {p.agent_name || 'CredibleState'}</span>
+          <div style={{ fontSize: '11px', color: '#9C9488', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              by {p.agent_name || 'CredibleState'}
+              {isAgentVerified && (
+                <span title="Verified agent" style={{ color: '#1E4D35', fontSize: '11px' }}>✓</span>
+              )}
+            </span>
             <span>{timeAgo(p.created_at)}</span>
           </div>
         </div>

@@ -75,15 +75,25 @@ export default async function PropertyDetail({
 
   const p = property as Property
 
-  // Similar properties — same listing type
-  const { data: similarRaw } = await supabase
-    .from('properties')
-    .select('*')
-    .eq('status', 'verified')
-    .eq('listing_type', p.listing_type)
-    .neq('id', p.id)
-    .limit(3)
+  // Agent profile + rating (verified badge, public profile link, star avg)
+  const [{ data: agentProfile }, { data: ratingSummary }, { data: similarRaw }] = await Promise.all([
+    p.agent_id
+      ? supabase.from('profiles').select('id, full_name, is_verified_agent').eq('id', p.agent_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    p.agent_id
+      ? supabase.from('agent_rating_summary').select('*').eq('agent_id', p.agent_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    supabase
+      .from('properties')
+      .select('*')
+      .eq('status', 'verified')
+      .eq('listing_type', p.listing_type)
+      .neq('id', p.id)
+      .limit(3),
+  ])
 
+  const agent = agentProfile as { id: string; full_name: string | null; is_verified_agent: boolean } | null
+  const rating = ratingSummary as { rating_avg: number | null; review_count: number } | null
   const similar = (similarRaw as Property[]) || []
   const heroImg = p.images && p.images.length > 0 ? p.images[0] : null
   const galleryImgs = p.images && p.images.length > 1 ? p.images.slice(1, 5) : []
@@ -239,11 +249,28 @@ export default async function PropertyDetail({
               <div style={{ fontSize: '12px', color: '#9C9488', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600, marginBottom: '6px' }}>Listed by</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'linear-gradient(135deg,#B84A1E,#E8732F)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '18px' }}>
-                  {(p.agent_name || 'A').charAt(0).toUpperCase()}
+                  {((agent?.full_name ?? p.agent_name) || 'A').charAt(0).toUpperCase()}
                 </div>
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: '15px' }}>{p.agent_name || 'Verified Agent'}</div>
-                  <div style={{ fontSize: '12px', color: '#9C9488' }}>⭐ Verified · Responds in 4h</div>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                    {agent ? (
+                      <Link href={`/agent/${agent.id}`} style={{ color: '#100E0B', textDecoration: 'none' }}>
+                        {agent.full_name || p.agent_name || 'Agent'}
+                      </Link>
+                    ) : (
+                      <span>{p.agent_name || 'Verified Agent'}</span>
+                    )}
+                    {agent?.is_verified_agent && (
+                      <span title="KYC verified agent" style={{ background: '#EBF5EF', color: '#1E4D35', padding: '1px 7px', borderRadius: '6px', fontSize: '10px', fontWeight: 700, letterSpacing: '0.04em' }}>
+                        ✓ KYC
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#9C9488' }}>
+                    {rating?.rating_avg != null
+                      ? `★ ${rating.rating_avg.toFixed(1)} · ${rating.review_count} review${rating.review_count === 1 ? '' : 's'}`
+                      : 'Responds in 4h · Direct owner'}
+                  </div>
                 </div>
               </div>
             </div>

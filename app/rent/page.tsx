@@ -1,6 +1,8 @@
 import Link from 'next/link'
-import { supabase, type Property } from '@/lib/supabase'
+import { supabase, type Property, type SavedSearchFilters } from '@/lib/supabase'
 import PropertyCard from '@/components/PropertyCard'
+import SaveSearchButton from '@/components/SaveSearchButton'
+import { getCurrentUser } from '@/lib/supabase-server'
 
 export const revalidate = 120 // 2 min
 
@@ -9,10 +11,26 @@ type SearchParams = {
   type?: string
   property_type?: string
   locality?: string
+  localities?: string | string[]
   bhk?: string
   min?: string
   max?: string
+  furnished?: string
+  parking?: string
+  gated?: string
   sort?: string
+}
+
+/** Known Hyderabad localities for the chip picker. Kept in sync with lib/localities.ts seed. */
+const POPULAR_LOCALITIES = [
+  'Kondapur', 'Gachibowli', 'Madhapur', 'Banjara Hills', 'Jubilee Hills',
+  'Hitech City', 'Financial District', 'Miyapur', 'Ameerpet', 'Secunderabad',
+  'Himayat Nagar', 'Shamshabad', 'Tellapur', 'Kukatpally', 'Begumpet',
+]
+
+function toArray(v: string | string[] | undefined): string[] {
+  if (!v) return []
+  return Array.isArray(v) ? v : [v]
 }
 
 export default async function RentPage({
@@ -21,8 +39,16 @@ export default async function RentPage({
   searchParams: Promise<SearchParams>
 }) {
   const params = await searchParams
+  const user = await getCurrentUser()
 
-  // Determine sort order
+  // Localities: support either ?localities=A&localities=B (multi) or ?locality=A (legacy)
+  const localityList = (() => {
+    const fromArr = toArray(params.localities).filter(Boolean)
+    if (fromArr.length > 0) return fromArr
+    return params.locality ? [params.locality] : []
+  })()
+
+  // Sort
   let sortField: string = 'created_at'
   let sortAsc = false
   if (params.sort === 'price-low') { sortField = 'price'; sortAsc = true }
@@ -42,11 +68,20 @@ export default async function RentPage({
   if (params.property_type) {
     query = query.eq('property_type', params.property_type)
   }
-  if (params.locality) {
-    query = query.ilike('locality', `%${params.locality}%`)
+  if (localityList.length > 0) {
+    // ilike OR across all selected localities
+    const orExpr = localityList
+      .map((loc) => `locality.ilike.%${loc.replace(/[,]/g, '')}%`)
+      .join(',')
+    query = query.or(orExpr)
   }
   if (params.bhk) {
-    query = query.eq('bedrooms', Number(params.bhk))
+    if (params.bhk === '4+') {
+      query = query.gte('bedrooms', 4)
+    } else {
+      const n = Number(params.bhk)
+      if (Number.isFinite(n)) query = query.eq('bedrooms', n)
+    }
   }
   if (params.min) {
     query = query.gte('price', Number(params.min))
@@ -54,6 +89,9 @@ export default async function RentPage({
   if (params.max) {
     query = query.lte('price', Number(params.max))
   }
+  if (params.furnished === 'yes') query = query.eq('is_furnished', true)
+  if (params.parking === 'yes') query = query.eq('has_parking', true)
+  if (params.gated === 'yes') query = query.eq('is_gated', true)
   if (params.q) {
     query = query.or(
       `title.ilike.%${params.q}%,description.ilike.%${params.q}%,locality.ilike.%${params.q}%`,
@@ -67,6 +105,25 @@ export default async function RentPage({
   } catch {
     properties = []
   }
+
+  // Build the filters blob we'll hand to the SaveSearchButton
+  const filtersForSave: SavedSearchFilters = {
+    q: params.q || undefined,
+    type: params.type === 'rent' ? 'rent' : params.type === 'sale' ? 'sale' : undefined,
+    property_type: params.property_type || undefined,
+    localities: localityList,
+    bhk: params.bhk || undefined,
+    min: params.min || undefined,
+    max: params.max || undefined,
+    furnished: params.furnished === 'yes' ? 'yes' : undefined,
+    parking: params.parking === 'yes' ? 'yes' : undefined,
+    gated: params.gated === 'yes' ? 'yes' : undefined,
+  }
+
+  const hasAnyFilter =
+    !!params.q || !!params.type || !!params.property_type || localityList.length > 0 ||
+    !!params.bhk || !!params.min || !!params.max ||
+    params.furnished === 'yes' || params.parking === 'yes' || params.gated === 'yes'
 
   return (
     <>
@@ -88,57 +145,129 @@ export default async function RentPage({
               borderRadius: '16px',
               padding: '20px',
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-              gap: '12px',
+              gap: '14px',
             }}
           >
-            <input name="q" defaultValue={params.q || ''} placeholder="Search keywords..." style={inputStyle} />
-            <select name="type" defaultValue={params.type || ''} style={inputStyle}>
-              <option value="">All Listings</option>
-              <option value="rent">For Rent</option>
-              <option value="sale">For Sale</option>
-            </select>
-            <select name="property_type" defaultValue={params.property_type || ''} style={inputStyle}>
-              <option value="">Any Type</option>
-              <option value="flat">Flat / Apartment</option>
-              <option value="villa">Villa</option>
-              <option value="pg">PG / Hostel</option>
-              <option value="plot">Plot / Land</option>
-              <option value="commercial">Commercial</option>
-            </select>
-            <input name="locality" defaultValue={params.locality || ''} placeholder="Locality (e.g., Kondapur)" style={inputStyle} />
-            <select name="bhk" defaultValue={params.bhk || ''} style={inputStyle}>
-              <option value="">Any BHK</option>
-              <option value="1">1 BHK</option>
-              <option value="2">2 BHK</option>
-              <option value="3">3 BHK</option>
-              <option value="4">4+ BHK</option>
-            </select>
-            <input name="min" defaultValue={params.min || ''} placeholder="Min price (₹)" style={inputStyle} type="number" />
-            <input name="max" defaultValue={params.max || ''} placeholder="Max price (₹)" style={inputStyle} type="number" />
-            <select name="sort" defaultValue={params.sort || ''} style={inputStyle}>
-              <option value="">Sort: Newest first</option>
-              <option value="newest">Newest first</option>
-              <option value="oldest">Oldest first</option>
-              <option value="price-low">Price: Low to High</option>
-              <option value="price-high">Price: High to Low</option>
-            </select>
-            <button
-              type="submit"
-              style={{
-                background: '#B84A1E',
-                color: '#fff',
-                border: 'none',
-                padding: '12px 20px',
-                borderRadius: '10px',
-                fontSize: '14px',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-            >
-              Apply Filters
-            </button>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
+              <input name="q" defaultValue={params.q || ''} placeholder="Search keywords..." style={inputStyle} />
+              <select name="type" defaultValue={params.type || ''} style={inputStyle}>
+                <option value="">All Listings</option>
+                <option value="rent">For Rent</option>
+                <option value="sale">For Sale</option>
+              </select>
+              <select name="property_type" defaultValue={params.property_type || ''} style={inputStyle}>
+                <option value="">Any Type</option>
+                <option value="flat">Flat / Apartment</option>
+                <option value="villa">Villa</option>
+                <option value="pg">PG / Hostel</option>
+                <option value="plot">Plot / Land</option>
+                <option value="commercial">Commercial</option>
+              </select>
+              <select name="bhk" defaultValue={params.bhk || ''} style={inputStyle}>
+                <option value="">Any BHK</option>
+                <option value="1">1 BHK</option>
+                <option value="2">2 BHK</option>
+                <option value="3">3 BHK</option>
+                <option value="4+">4+ BHK</option>
+              </select>
+              <input name="min" defaultValue={params.min || ''} placeholder="Min price (₹)" style={inputStyle} type="number" />
+              <input name="max" defaultValue={params.max || ''} placeholder="Max price (₹)" style={inputStyle} type="number" />
+              <select name="sort" defaultValue={params.sort || ''} style={inputStyle}>
+                <option value="">Sort: Newest first</option>
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+              </select>
+            </div>
+
+            {/* Locality chips (multi-select via checkbox group, names submit as `localities`) */}
+            <div>
+              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
+                Localities
+              </div>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {POPULAR_LOCALITIES.map((loc) => {
+                  const checked = localityList.includes(loc)
+                  return (
+                    <label key={loc} style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '6px 12px',
+                      borderRadius: '20px',
+                      fontSize: '12px',
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      background: checked ? '#B84A1E' : 'rgba(255,255,255,0.08)',
+                      color: checked ? '#fff' : 'rgba(255,255,255,0.8)',
+                      border: '0.5px solid ' + (checked ? '#B84A1E' : 'rgba(255,255,255,0.18)'),
+                    }}>
+                      <input
+                        type="checkbox"
+                        name="localities"
+                        value={loc}
+                        defaultChecked={checked}
+                        style={{ display: 'none' }}
+                      />
+                      {loc}
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Amenity toggles */}
+            <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <CheckChip name="furnished" defaultChecked={params.furnished === 'yes'} label="🛋️ Furnished" />
+              <CheckChip name="parking"   defaultChecked={params.parking   === 'yes'} label="🚗 Parking" />
+              <CheckChip name="gated"     defaultChecked={params.gated     === 'yes'} label="🔒 Gated" />
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+              {hasAnyFilter && (
+                <Link
+                  href="/rent"
+                  style={{
+                    background: 'rgba(255,255,255,0.08)',
+                    color: 'rgba(255,255,255,0.85)',
+                    padding: '12px 18px',
+                    borderRadius: '10px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    textDecoration: 'none',
+                  }}
+                >
+                  Clear all
+                </Link>
+              )}
+              <button
+                type="submit"
+                style={{
+                  background: '#B84A1E',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: '10px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Apply Filters
+              </button>
+            </div>
           </form>
+
+          {/* Save this search */}
+          {hasAnyFilter && (
+            <div style={{ marginTop: '14px' }}>
+              <SaveSearchButton
+                filters={filtersForSave}
+                isSignedIn={!!user}
+              />
+            </div>
+          )}
         </div>
       </section>
 
@@ -166,6 +295,27 @@ export default async function RentPage({
         </div>
       </section>
     </>
+  )
+}
+
+function CheckChip({ name, defaultChecked, label }: { name: string; defaultChecked: boolean; label: string }) {
+  return (
+    <label style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '6px',
+      padding: '8px 14px',
+      borderRadius: '20px',
+      fontSize: '13px',
+      fontWeight: 500,
+      cursor: 'pointer',
+      background: defaultChecked ? '#1E4D35' : 'rgba(255,255,255,0.08)',
+      color: defaultChecked ? '#fff' : 'rgba(255,255,255,0.85)',
+      border: '0.5px solid ' + (defaultChecked ? '#1E4D35' : 'rgba(255,255,255,0.18)'),
+    }}>
+      <input type="checkbox" name={name} value="yes" defaultChecked={defaultChecked} style={{ display: 'none' }} />
+      {label}
+    </label>
   )
 }
 

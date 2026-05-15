@@ -1,26 +1,48 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { createSupabaseBrowserClient } from '@/lib/supabase-client'
+import { mergeFavorites, toggleFavorite } from '@/app/account/actions'
 
 const STORAGE_KEY = 'crediblestate_favorites'
 
 export default function FavoriteButton({ propertyId, size = 'sm' }: { propertyId: string; size?: 'sm' | 'md' }) {
   const [saved, setSaved] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [signedIn, setSignedIn] = useState<boolean>(false)
 
   useEffect(() => {
     setMounted(true)
-    const list = getFavorites()
-    setSaved(list.includes(propertyId))
+    const localList = getFavorites()
+    setSaved(localList.includes(propertyId))
+
+    // Resolve auth state. If signed in, opportunistically merge any
+    // localStorage favorites into the server profile (one-time per render).
+    const s = createSupabaseBrowserClient()
+    s.auth.getSession().then((res: { data: { session: { user: { id: string } } | null } }) => {
+      const user = res.data.session?.user
+      if (!user) return
+      setSignedIn(true)
+      if (localList.length > 0) {
+        mergeFavorites(localList).catch(() => {})
+      }
+    })
   }, [propertyId])
 
-  function toggle(e: React.MouseEvent) {
+  async function toggle(e: React.MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
+    // Optimistic local toggle for snappy feedback (used by /favorites for anon).
     const list = getFavorites()
-    const updated = saved ? list.filter(id => id !== propertyId) : [...list, propertyId]
+    const updated = saved ? list.filter((id) => id !== propertyId) : [...list, propertyId]
     setFavorites(updated)
     setSaved(!saved)
+
+    if (signedIn) {
+      // Fire-and-forget server sync; ignore the returned canonical list — local
+      // and server agree because both flip the same item.
+      toggleFavorite(propertyId).catch(() => {})
+    }
   }
 
   if (!mounted) return null

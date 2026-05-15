@@ -39,11 +39,31 @@ export async function middleware(request: NextRequest) {
 
     const path = request.nextUrl.pathname
 
-    // Protect agent routes (except login)
-    if (path.startsWith('/agent') && !path.startsWith('/agent/login')) {
+    // Public, but doesn't need protection: agent profile pages live under /agent/[id]
+    // which look like /agent/<uuid> rather than /agent/dashboard|inquiries|login.
+    // Treat anything under /agent that isn't a known protected segment as public.
+    const PROTECTED_AGENT_SEGMENTS = ['dashboard', 'inquiries', 'messages']
+    const agentMatch = path.match(/^\/agent\/([^/]+)/)
+    const isProtectedAgentRoute = !!(
+      agentMatch && PROTECTED_AGENT_SEGMENTS.includes(agentMatch[1])
+    )
+
+    // Protect agent app routes (login is public, /agent/[id] profile is public)
+    if (isProtectedAgentRoute) {
       if (!user) {
         const url = request.nextUrl.clone()
-        url.pathname = '/agent/login'
+        url.pathname = '/signin'
+        url.searchParams.set('intent', 'agent')
+        url.searchParams.set('next', path)
+        return NextResponse.redirect(url)
+      }
+    }
+
+    // Buyer-only protected routes
+    if (path.startsWith('/account') || path.startsWith('/messages')) {
+      if (!user) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/signin'
         url.searchParams.set('next', path)
         return NextResponse.redirect(url)
       }
@@ -53,7 +73,7 @@ export async function middleware(request: NextRequest) {
     if (path.startsWith('/admin')) {
       if (!user || !user.email || !ADMIN_EMAILS.includes(user.email)) {
         const url = request.nextUrl.clone()
-        url.pathname = '/agent/login'
+        url.pathname = '/signin'
         url.searchParams.set('next', path)
         return NextResponse.redirect(url)
       }
@@ -70,5 +90,5 @@ export async function middleware(request: NextRequest) {
 export const config = {
   // Only run middleware where it actually matters.
   // Public pages don't need auth checks.
-  matcher: ['/agent/:path*', '/admin/:path*', '/auth/:path*'],
+  matcher: ['/agent/:path*', '/admin/:path*', '/auth/:path*', '/account/:path*', '/messages/:path*'],
 }

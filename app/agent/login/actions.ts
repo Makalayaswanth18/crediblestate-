@@ -3,7 +3,17 @@
 import { headers } from 'next/headers'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 
-export async function sendMagicLink(email: string): Promise<{ ok: true } | { ok: false; error: string }> {
+type MagicLinkOptions = {
+  /** path to redirect to after a successful exchange */
+  next?: string
+  /** 'agent' marks the new profile as agent on first login (no-op for returning users) */
+  intent?: 'agent' | 'buyer'
+}
+
+export async function sendMagicLink(
+  email: string,
+  options: MagicLinkOptions = {},
+): Promise<{ ok: true } | { ok: false; error: string }> {
   const cleanEmail = email.trim().toLowerCase()
   if (!cleanEmail || !cleanEmail.includes('@')) {
     return { ok: false, error: 'Please enter a valid email address.' }
@@ -15,10 +25,16 @@ export async function sendMagicLink(email: string): Promise<{ ok: true } | { ok:
   const protocol = host.includes('localhost') ? 'http' : 'https'
   const origin = `${protocol}://${host}`
 
+  // Pack intent + next into the callback URL so the route handler can read them
+  // after the code exchange.
+  const callback = new URL('/auth/callback', origin)
+  if (options.next) callback.searchParams.set('next', options.next)
+  if (options.intent) callback.searchParams.set('intent', options.intent)
+
   const { error } = await supabase.auth.signInWithOtp({
     email: cleanEmail,
     options: {
-      emailRedirectTo: `${origin}/auth/callback`,
+      emailRedirectTo: callback.toString(),
       shouldCreateUser: true,
     },
   })

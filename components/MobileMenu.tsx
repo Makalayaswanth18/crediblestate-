@@ -7,9 +7,11 @@ import { usePathname } from 'next/navigation'
 export default function MobileMenu({
   user,
   isAdmin,
+  role = 'buyer',
 }: {
   user: { email: string } | null
   isAdmin: boolean
+  role?: 'buyer' | 'agent'
 }) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
@@ -94,6 +96,7 @@ export default function MobileMenu({
 
             <MobileLink href="/rent">🔍 Browse Properties</MobileLink>
             <MobileLink href="/favorites">♥ Saved</MobileLink>
+            {user && <MobileLink href="/messages">💬 Messages</MobileLink>}
             <MobileLink href="/about">📖 About</MobileLink>
 
             <div style={{ borderTop: '0.5px solid rgba(255,255,255,0.1)', margin: '12px 0' }} />
@@ -109,13 +112,21 @@ export default function MobileMenu({
             <div style={{ borderTop: '0.5px solid rgba(255,255,255,0.1)', margin: '12px 0' }} />
 
             {isAdmin && (
-              <MobileLink href="/admin/pending" highlight>⚡ Admin Queue</MobileLink>
+              <>
+                <MobileLink href="/admin/pending" highlight>⚡ Admin · Listings</MobileLink>
+                <MobileLink href="/admin/agents" highlight>⚡ Admin · Agents</MobileLink>
+              </>
             )}
 
             {user ? (
-              <MobileLink href="/agent/dashboard" highlight>📊 Dashboard</MobileLink>
+              <MobileLink
+                href={role === 'agent' ? '/agent/dashboard' : '/account'}
+                highlight
+              >
+                {role === 'agent' ? '📊 Dashboard' : '👤 Account'}
+              </MobileLink>
             ) : (
-              <MobileLink href="/agent/login">Sign in</MobileLink>
+              <MobileLink href="/signin">Sign in</MobileLink>
             )}
 
             <div style={{ marginTop: 'auto', paddingTop: '20px' }}>

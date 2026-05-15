@@ -47,3 +47,41 @@ export async function requireAdmin() {
 export function isAdmin(email: string | null | undefined): boolean {
   return !!email && ADMIN_EMAILS.includes(email)
 }
+
+import type { Profile } from './supabase'
+
+/**
+ * Fetch the signed-in user together with their profile row.
+ * Returns { user, profile } — both nullable.
+ *
+ * The DB trigger handle_new_user() guarantees a profile row exists for any
+ * authenticated user, but during the window between sign-up and trigger fire
+ * (or for users who pre-date migration 004) it can be missing — we lazily
+ * insert in that case so the rest of the app never has to special-case it.
+ */
+export async function getCurrentUserWithProfile(): Promise<{
+  user: Awaited<ReturnType<typeof getCurrentUser>>
+  profile: Profile | null
+}> {
+  const supabase = await createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { user: null, profile: null }
+
+  const { data: existing } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  if (existing) return { user, profile: existing as Profile }
+
+  // Lazy-create — should be rare (trigger covers new signups).
+  const fallbackName = user.email?.split('@')[0] ?? null
+  const { data: created } = await supabase
+    .from('profiles')
+    .insert({ id: user.id, full_name: fallbackName })
+    .select('*')
+    .single()
+
+  return { user, profile: (created as Profile) ?? null }
+}

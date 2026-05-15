@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { submitInquiry } from '@/app/property/[slug]/inquiry-action'
+import { createSupabaseBrowserClient } from '@/lib/supabase-client'
 
 export default function InquiryForm({
   propertyId,
@@ -11,26 +13,52 @@ export default function InquiryForm({
   propertyTitle: string
 }) {
   const [submitting, setSubmitting] = useState(false)
-  const [sent, setSent] = useState(false)
+  const [sentTo, setSentTo] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [isSignedIn, setIsSignedIn] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    // Read session client-side so the wrapping page can stay statically cached.
+    const s = createSupabaseBrowserClient()
+    s.auth.getSession().then((res: { data: { session: unknown } }) => {
+      setIsSignedIn(!!res.data.session)
+    })
+  }, [])
 
   async function handleSubmit(formData: FormData) {
     setSubmitting(true)
     setError(null)
     const res = await submitInquiry(propertyId, formData)
     setSubmitting(false)
-    if (res.ok) setSent(true)
+    if (res.ok) setSentTo(res.conversationId)
     else setError(res.error)
   }
 
-  if (sent) {
+  if (sentTo) {
     return (
       <div style={{ background: '#EBF5EF', border: '0.5px solid #B8DBC6', borderRadius: '12px', padding: '20px', textAlign: 'center' }}>
         <div style={{ fontSize: '32px', marginBottom: '10px' }}>✅</div>
-        <h4 style={{ fontSize: '15px', fontWeight: 600, color: '#1E4D35', marginBottom: '6px' }}>Request sent!</h4>
-        <p style={{ fontSize: '13px', color: '#4A4238', lineHeight: 1.6 }}>
-          The owner will call you back shortly. Meanwhile, you can also WhatsApp them directly using the button above.
+        <h4 style={{ fontSize: '15px', fontWeight: 600, color: '#1E4D35', marginBottom: '6px' }}>Message sent!</h4>
+        <p style={{ fontSize: '13px', color: '#4A4238', lineHeight: 1.6, marginBottom: isSignedIn ? '12px' : 0 }}>
+          The owner will get back to you shortly. Meanwhile, you can also WhatsApp them directly using the button above.
         </p>
+        {isSignedIn && (
+          <Link
+            href={`/messages/${sentTo}`}
+            style={{
+              display: 'inline-block',
+              background: '#1E4D35',
+              color: '#fff',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              fontSize: '13px',
+              fontWeight: 600,
+              textDecoration: 'none',
+            }}
+          >
+            Open conversation →
+          </Link>
+        )}
       </div>
     )
   }
@@ -66,6 +94,7 @@ export default function InquiryForm({
         rows={2}
         defaultValue={`Hi, I'm interested in "${propertyTitle}". Please call me back.`}
         style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }}
+        required
       />
 
       {error && (
@@ -88,8 +117,14 @@ export default function InquiryForm({
           cursor: submitting ? 'not-allowed' : 'pointer',
         }}
       >
-        {submitting ? 'Sending…' : 'Request Callback'}
+        {submitting ? 'Sending…' : isSignedIn ? 'Send Message' : 'Request Callback'}
       </button>
+
+      {!isSignedIn && (
+        <p style={{ fontSize: '11px', color: '#9C9488', textAlign: 'center', marginTop: '2px' }}>
+          <Link href="/signin" style={{ color: '#B84A1E' }}>Sign in</Link> to track replies in your inbox.
+        </p>
+      )}
     </form>
   )
 }

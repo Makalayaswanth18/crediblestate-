@@ -1,10 +1,16 @@
 'use client'
 
 import { useState } from 'react'
+import { Suspense } from 'react'
 import Link from 'next/link'
-import { sendMagicLink } from './actions'
+import { useSearchParams } from 'next/navigation'
+import { sendMagicLink } from '@/app/agent/login/actions'
 
-export default function LoginPage() {
+function SignInForm() {
+  const params = useSearchParams()
+  const next = params.get('next') || ''
+  const intent = params.get('intent') === 'agent' ? 'agent' : 'buyer'
+
   const [email, setEmail] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [sent, setSent] = useState(false)
@@ -14,19 +20,15 @@ export default function LoginPage() {
     e.preventDefault()
     setError(null)
     setSubmitting(true)
-    const res = await sendMagicLink(email, { intent: 'agent' })
+    const res = await sendMagicLink(email, { next, intent })
     setSubmitting(false)
-    if (res.ok) {
-      setSent(true)
-    } else {
-      setError(res.error)
-    }
+    if (res.ok) setSent(true)
+    else setError(res.error)
   }
 
   return (
     <section style={{ minHeight: 'calc(100vh - 64px)', background: 'linear-gradient(160deg,#1A120A,#2C1A0E,#0E2218)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 5vw' }}>
       <div style={{ width: '100%', maxWidth: '440px', background: '#fff', borderRadius: '24px', padding: '48px 36px', boxShadow: '0 24px 60px rgba(0,0,0,0.3)' }}>
-
         {sent ? (
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '48px', marginBottom: '20px' }}>📧</div>
@@ -47,13 +49,13 @@ export default function LoginPage() {
               <div style={{ fontFamily: 'var(--font-playfair), serif', fontSize: '32px', fontWeight: 700, marginBottom: '6px', color: '#100E0B' }}>
                 Credible<span style={{ color: '#9C9488', fontWeight: 400 }}>State</span>
               </div>
-              <p style={{ fontSize: '14px', color: '#9C9488' }}>Agent Login</p>
+              <p style={{ fontSize: '14px', color: '#9C9488' }}>
+                {intent === 'agent' ? 'Agent sign in' : 'Sign in or create account'}
+              </p>
             </div>
 
             <form onSubmit={handleSubmit}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#4A4238', marginBottom: '6px' }}>
-                Email address
-              </label>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#4A4238', marginBottom: '6px' }}>Email address</label>
               <input
                 type="email"
                 required
@@ -93,14 +95,27 @@ export default function LoginPage() {
             </p>
 
             <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: '0.5px solid #EEEAE3', textAlign: 'center' }}>
-              <p style={{ fontSize: '13px', color: '#4A4238', marginBottom: '6px' }}>New to CredibleState?</p>
-              <Link href="/list" style={{ fontSize: '14px', color: '#B84A1E', fontWeight: 600, textDecoration: 'none' }}>
-                List your first property →
+              <p style={{ fontSize: '13px', color: '#4A4238', marginBottom: '6px' }}>
+                {intent === 'agent' ? 'Looking for a home instead?' : 'Have a property to list?'}
+              </p>
+              <Link
+                href={intent === 'agent' ? '/signin' : '/signin?intent=agent'}
+                style={{ fontSize: '14px', color: '#B84A1E', fontWeight: 600, textDecoration: 'none' }}
+              >
+                {intent === 'agent' ? 'Sign in as buyer →' : 'I\'m an agent →'}
               </Link>
             </div>
           </>
         )}
       </div>
     </section>
+  )
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignInForm />
+    </Suspense>
   )
 }
