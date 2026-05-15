@@ -9,7 +9,7 @@ export default async function EditListingPage({ params }: { params: Promise<{ id
   const { id } = await params
   const supabase = await createSupabaseServerClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/agent/login')
+  if (!user) redirect('/signin?intent=agent')
 
   const { data } = await supabase
     .from('properties')

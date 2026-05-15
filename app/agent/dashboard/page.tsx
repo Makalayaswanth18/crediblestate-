@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic'
 export default async function AgentDashboard() {
   const supabase = await createSupabaseServerClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/agent/login')
+  if (!user) redirect('/signin?intent=agent&next=/agent/dashboard')
 
   const { data: listingsRaw } = await supabase
     .from('properties')

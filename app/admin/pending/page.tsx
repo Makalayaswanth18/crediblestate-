@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function AdminPendingPage() {
   const admin = await requireAdmin()
-  if (!admin) redirect('/agent/login?next=/admin/pending')
+  if (!admin) redirect('/signin?next=/admin/pending')
 
   const supabase = await createSupabaseServerClient()
   const { data: pending } = await supabase

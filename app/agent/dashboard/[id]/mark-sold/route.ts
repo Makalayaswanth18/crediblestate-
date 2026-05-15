@@ -6,7 +6,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const { id } = await params
   const supabase = await createSupabaseServerClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.redirect(new URL('/agent/login', request.url))
+  if (!user) return NextResponse.redirect(new URL('/signin?intent=agent', request.url))
 
   await supabase
     .from('properties')
