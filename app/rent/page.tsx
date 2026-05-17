@@ -2,7 +2,8 @@ import Link from 'next/link'
 import { supabase, type Property, type SavedSearchFilters } from '@/lib/supabase'
 import PropertyCard from '@/components/PropertyCard'
 import SaveSearchButton from '@/components/SaveSearchButton'
-import { getCurrentUser } from '@/lib/supabase-server'
+// SaveSearchButton discovers signin state client-side now — we deliberately
+// don't read cookies in this server component, so /rent stays CDN-cacheable.
 
 export const revalidate = 120 // 2 min
 
@@ -39,7 +40,6 @@ export default async function RentPage({
   searchParams: Promise<SearchParams>
 }) {
   const params = await searchParams
-  const user = await getCurrentUser()
 
   // Localities: support either ?localities=A&localities=B (multi) or ?locality=A (legacy)
   const localityList = (() => {
@@ -262,10 +262,7 @@ export default async function RentPage({
           {/* Save this search */}
           {hasAnyFilter && (
             <div style={{ marginTop: '14px' }}>
-              <SaveSearchButton
-                filters={filtersForSave}
-                isSignedIn={!!user}
-              />
+              <SaveSearchButton filters={filtersForSave} />
             </div>
           )}
         </div>

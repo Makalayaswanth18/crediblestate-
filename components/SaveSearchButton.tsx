@@ -1,22 +1,39 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { saveCurrentSearch } from '@/app/account/actions'
+import { createSupabaseBrowserClient } from '@/lib/supabase-client'
 import type { SavedSearchFilters } from '@/lib/supabase'
 
+/**
+ * Discovers signin state client-side so the enclosing /rent page can stay
+ * CDN-cacheable. (If we read cookies on the server we make /rent dynamic,
+ * which means Cloudflare never serves a cached HTML response — costing us a
+ * 5-10x capacity multiplier on the hottest page on the site.)
+ */
 export default function SaveSearchButton({
   filters,
-  isSignedIn,
 }: {
   filters: SavedSearchFilters
-  isSignedIn: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState(defaultName(filters))
   const [submitting, setSubmitting] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isSignedIn, setIsSignedIn] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    const s = createSupabaseBrowserClient()
+    s.auth.getSession().then((res: { data: { session: unknown } }) => {
+      setIsSignedIn(!!res.data.session)
+    })
+  }, [])
+
+  // While we don't yet know whether the visitor is signed in, render nothing —
+  // we don't want to flash the wrong CTA.
+  if (isSignedIn === null) return null
 
   if (!isSignedIn) {
     // Prompt to sign in, preserving the current filters in the next param.

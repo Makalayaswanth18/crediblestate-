@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -10,11 +10,40 @@ function SignInForm() {
   const params = useSearchParams()
   const next = params.get('next') || ''
   const intent = params.get('intent') === 'agent' ? 'agent' : 'buyer'
+  const queryError = params.get('error')
 
   const [email, setEmail] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Supabase returns the verify-endpoint failure as a URL *fragment*
+  // (#error=access_denied&error_code=otp_expired&...). The query string only
+  // tells us SOMETHING failed; the fragment has the actual reason. We parse it
+  // on mount, translate into a friendly message, then strip it from the URL so
+  // a refresh doesn't keep showing it.
+  useEffect(() => {
+    if (!queryError) return
+
+    let message = 'Your sign-in link couldn\'t be used. Please request a new one.'
+
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const frag = new URLSearchParams(window.location.hash.replace(/^#/, ''))
+      const code = frag.get('error_code')
+      const desc = frag.get('error_description')
+
+      if (code === 'otp_expired') {
+        message = 'That magic link has expired or was already used. Send yourself a fresh one — each link works only once and for up to one hour.'
+      } else if (code === 'access_denied' || desc) {
+        message = desc?.replace(/\+/g, ' ') ?? message
+      }
+
+      // Clean the URL so reloading doesn't re-show the error.
+      window.history.replaceState({}, '', window.location.pathname + window.location.search.replace(/[?&]error=[^&]*/, ''))
+    }
+
+    setError(message)
+  }, [queryError])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
