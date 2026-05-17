@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { supabase, type Property, type SavedSearchFilters } from '@/lib/supabase'
 import PropertyCard from '@/components/PropertyCard'
 import SaveSearchButton from '@/components/SaveSearchButton'
+import { POPULAR_LOCALITIES as ALL_LOCALITIES } from '@/lib/localities'
 // SaveSearchButton discovers signin state client-side now — we deliberately
 // don't read cookies in this server component, so /rent stays CDN-cacheable.
 
@@ -22,12 +23,11 @@ type SearchParams = {
   sort?: string
 }
 
-/** Known Hyderabad localities for the chip picker. Kept in sync with lib/localities.ts seed. */
-const POPULAR_LOCALITIES = [
-  'Kondapur', 'Gachibowli', 'Madhapur', 'Banjara Hills', 'Jubilee Hills',
-  'Hitech City', 'Financial District', 'Miyapur', 'Ameerpet', 'Secunderabad',
-  'Himayat Nagar', 'Shamshabad', 'Tellapur', 'Kukatpally', 'Begumpet',
-]
+/**
+ * Popular Hyderabad localities for the chip row. Pulled from lib/localities so
+ * the chip names + slugs stay aligned with the dedicated /rent/[slug] pages.
+ */
+const POPULAR_LOCALITIES = ALL_LOCALITIES
 
 function toArray(v: string | string[] | undefined): string[] {
   if (!v) return []
@@ -181,37 +181,44 @@ export default async function RentPage({
               </select>
             </div>
 
-            {/* Locality chips (multi-select via checkbox group, names submit as `localities`) */}
+            {/*
+              Locality chips — click any one to jump straight to that locality's
+              page. Each chip links to /rent/[slug] (already a real page that
+              shows that locality's verified listings, with an SEO-tuned hero +
+              "explore other localities" footer for cross-linking).
+
+              We deliberately don't make these multi-select anymore: a single
+              click → results, no extra "Apply Filters" step. Power users who
+              want multi-locality can still combine via the ?localities=A&B
+              URL params manually.
+             */}
             <div>
               <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
-                Localities
+                Popular localities · click to view
               </div>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 {POPULAR_LOCALITIES.map((loc) => {
-                  const checked = localityList.includes(loc)
+                  const active = localityList.includes(loc.name)
                   return (
-                    <label key={loc} style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      padding: '6px 12px',
-                      borderRadius: '20px',
-                      fontSize: '12px',
-                      fontWeight: 500,
-                      cursor: 'pointer',
-                      background: checked ? '#B84A1E' : 'rgba(255,255,255,0.08)',
-                      color: checked ? '#fff' : 'rgba(255,255,255,0.8)',
-                      border: '0.5px solid ' + (checked ? '#B84A1E' : 'rgba(255,255,255,0.18)'),
-                    }}>
-                      <input
-                        type="checkbox"
-                        name="localities"
-                        value={loc}
-                        defaultChecked={checked}
-                        style={{ display: 'none' }}
-                      />
-                      {loc}
-                    </label>
+                    <Link
+                      key={loc.slug}
+                      href={`/rent/${loc.slug}`}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        padding: '6px 12px',
+                        borderRadius: '20px',
+                        fontSize: '12px',
+                        fontWeight: 500,
+                        textDecoration: 'none',
+                        background: active ? '#B84A1E' : 'rgba(255,255,255,0.08)',
+                        color: active ? '#fff' : 'rgba(255,255,255,0.85)',
+                        border: '0.5px solid ' + (active ? '#B84A1E' : 'rgba(255,255,255,0.18)'),
+                        transition: 'background 0.15s, color 0.15s',
+                      }}
+                    >
+                      {loc.name}
+                    </Link>
                   )
                 })}
               </div>
