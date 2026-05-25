@@ -33,6 +33,7 @@ export type Property = {
   phone: string | null
   whatsapp: string | null
   status: 'pending' | 'verified' | 'rejected' | 'rented' | 'sold'
+  owner_listed: boolean
   agent_id: string | null
   created_at: string
   updated_at: string
@@ -53,7 +54,7 @@ export type Inquiry = {
 // (added in migration 004)
 // ===========================================
 
-export type UserRole = 'buyer' | 'agent'
+export type UserRole = 'buyer' | 'agent' | 'owner'
 
 export type Profile = {
   id: string
@@ -113,6 +114,7 @@ export type SavedSearchFilters = {
   furnished?: 'yes' | 'no'
   parking?: 'yes' | 'no'
   gated?: 'yes' | 'no'
+  owner_only?: 'yes'
 }
 
 export type SavedSearch = {

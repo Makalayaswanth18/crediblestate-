@@ -11,7 +11,7 @@ export default function MobileMenu({
 }: {
   user: { email: string } | null
   isAdmin: boolean
-  role?: 'buyer' | 'agent'
+  role?: 'buyer' | 'agent' | 'owner'
 }) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
@@ -21,14 +21,19 @@ export default function MobileMenu({
     setOpen(false)
   }, [pathname])
 
-  // Lock body scroll when open
+  // Lock body scroll when open; close on Escape
   useEffect(() => {
     if (open) {
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = ''
     }
-    return () => { document.body.style.overflow = '' }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = ''
+      document.removeEventListener('keydown', onKey)
+    }
   }, [open])
 
   return (
@@ -64,6 +69,9 @@ export default function MobileMenu({
           }}
         >
           <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation menu"
             onClick={(e) => e.stopPropagation()}
             style={{
               position: 'fixed',
@@ -120,10 +128,10 @@ export default function MobileMenu({
 
             {user ? (
               <MobileLink
-                href={role === 'agent' ? '/agent/dashboard' : '/account'}
+                href={role === 'agent' ? '/agent/dashboard' : role === 'owner' ? '/owner/dashboard' : '/account'}
                 highlight
               >
-                {role === 'agent' ? '📊 Dashboard' : '👤 Account'}
+                {role === 'agent' ? '📊 Dashboard' : role === 'owner' ? '🏠 My Property' : '👤 Account'}
               </MobileLink>
             ) : (
               <MobileLink href="/signin">Sign in</MobileLink>

@@ -38,7 +38,7 @@ export default function FavoritesPage() {
             Your <em style={{ color: '#E8732F', fontStyle: 'italic' }}>saved</em> properties
           </h1>
           <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', marginTop: '6px' }}>
-            Saved on this device · {favorites.length} {favorites.length === 1 ? 'property' : 'properties'}
+            {loading ? 'Loading saved properties…' : `Saved on this device · ${favorites.length} ${favorites.length === 1 ? 'property' : 'properties'}`}
           </p>
         </div>
       </section>

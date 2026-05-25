@@ -39,7 +39,10 @@ function SignInForm() {
       }
 
       // Clean the URL so reloading doesn't re-show the error.
-      window.history.replaceState({}, '', window.location.pathname + window.location.search.replace(/[?&]error=[^&]*/, ''))
+      const sp = new URLSearchParams(window.location.search)
+      sp.delete('error')
+      const qs = sp.toString()
+      window.history.replaceState({}, '', window.location.pathname + (qs ? '?' + qs : ''))
     }
 
     setError(message)

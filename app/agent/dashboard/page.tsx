@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { createSupabaseServerClient, getCurrentUserWithProfile } from '@/lib/supabase-server'
 import type { Property } from '@/lib/supabase'
 import { formatPrice } from '@/lib/format'
 import { signOut } from '../login/actions'
@@ -8,9 +8,10 @@ import { signOut } from '../login/actions'
 export const dynamic = 'force-dynamic'
 
 export default async function AgentDashboard() {
-  const supabase = await createSupabaseServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { user, profile } = await getCurrentUserWithProfile()
   if (!user) redirect('/signin?intent=agent&next=/agent/dashboard')
+
+  const supabase = await createSupabaseServerClient()
 
   const { data: listingsRaw } = await supabase
     .from('properties')
@@ -47,7 +48,7 @@ export default async function AgentDashboard() {
           <div>
             <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Agent Dashboard</span>
             <h1 style={{ fontFamily: 'var(--font-playfair), serif', fontSize: 'clamp(28px,4vw,40px)', fontWeight: 400, marginTop: '6px', letterSpacing: '-0.01em' }}>
-              Welcome back, <em style={{ color: '#E8732F', fontStyle: 'italic' }}>{user.email?.split('@')[0]}</em>
+              Welcome back, <em style={{ color: '#E8732F', fontStyle: 'italic' }}>{profile?.full_name || user.email?.split('@')[0]}</em>
             </h1>
           </div>
           <form action={async () => { 'use server'; await signOut(); redirect('/') }}>
@@ -92,8 +93,9 @@ export default async function AgentDashboard() {
               {/* Action bar */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
                 <h2 style={{ fontFamily: 'var(--font-playfair), serif', fontSize: '26px', fontWeight: 400 }}>Your listings</h2>
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   <Link href="/agent/messages" style={smallBtn}>📩 Messages</Link>
+                  <Link href="/agent/profile" style={smallBtn}>👤 My Profile</Link>
                   <Link href="/list" style={{ ...smallBtn, background: '#B84A1E', color: '#fff', borderColor: '#B84A1E' }}>+ New Listing</Link>
                 </div>
               </div>

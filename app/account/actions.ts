@@ -10,14 +10,18 @@ export async function updateProfile(formData: FormData): Promise<void> {
 
   const full_name = String(formData.get('full_name') || '').trim().slice(0, 120) || null
   const phone = String(formData.get('phone') || '').trim().slice(0, 32) || null
+  const bio = String(formData.get('bio') || '').trim().slice(0, 600) || null
 
   const supabase = await createSupabaseServerClient()
   await supabase
     .from('profiles')
-    .update({ full_name, phone })
+    .update({ full_name, phone, bio })
     .eq('id', user.id)
 
   revalidatePath('/account')
+  revalidatePath('/agent/profile')
+  // Revalidate the public agent profile page if this user is an agent
+  revalidatePath(`/agent/${user.id}`)
 }
 
 export async function deleteSavedSearch(formData: FormData): Promise<void> {

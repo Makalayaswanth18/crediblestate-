@@ -8,7 +8,8 @@ export function buildWaLink(
   phone: string | null | undefined,
   propertyTitle: string,
 ): string {
-  const cleanPhone = (phone || '919876543210').replace(/[^0-9]/g, '')
+  if (!phone) return '#'
+  const cleanPhone = phone.replace(/[^0-9]/g, '')
   const message = `Hi, I saw your property "${propertyTitle}" on CredibleState. Is it still available? I would like to schedule a visit.`
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`
 }

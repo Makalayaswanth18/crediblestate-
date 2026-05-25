@@ -6,19 +6,25 @@ export const revalidate = 300 // 5 min — homepage doesn't need to be ultra-fre
 
 export default async function HomePage() {
   let properties: Property[] = []
+  let totalCount = 0
   try {
-    const { data } = await supabase
-      .from('properties')
-      .select('*')
-      .eq('status', 'verified')
-      .order('created_at', { ascending: false })
-      .limit(6)
+    const [{ data }, { count }] = await Promise.all([
+      supabase
+        .from('properties')
+        .select('*')
+        .eq('status', 'verified')
+        .order('created_at', { ascending: false })
+        .limit(6),
+      supabase
+        .from('properties')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'verified'),
+    ])
     properties = (data as Property[]) || []
+    totalCount = count ?? 0
   } catch {
     properties = []
   }
-
-  const totalCount = properties.length
 
   return (
     <>
@@ -68,12 +74,25 @@ export default async function HomePage() {
           </button>
         </form>
 
+        {/* Quick locality chips */}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', position: 'relative', zIndex: 1, marginBottom: '40px' }}>
+          {['Kondapur', 'Gachibowli', 'Madhapur', 'Banjara Hills', 'Financial District', 'Miyapur'].map((loc) => (
+            <a
+              key={loc}
+              href={`/rent/${loc.toLowerCase().replace(/ /g, '-')}`}
+              style={{ background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.8)', padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: 500, textDecoration: 'none' }}
+            >
+              {loc}
+            </a>
+          ))}
+        </div>
+
         <div style={{ display: 'flex', gap: '48px', justifyContent: 'center', flexWrap: 'wrap', position: 'relative', zIndex: 1 }}>
           {[
             [totalCount > 0 ? `${totalCount}+` : 'Launching', 'Verified Listings'],
             ['₹0', 'Brokerage Fee'],
-            ['48h', 'Avg Move-in'],
-            ['100%', 'Verified'],
+            ['48h', 'Verification SLA'],
+            ['100%', 'Physical Checks'],
           ].map(([num, label]) => (
             <div key={label} style={{ textAlign: 'center' }}>
               <strong style={{ display: 'block', fontFamily: 'var(--font-playfair), serif', fontSize: '32px', color: '#fff', fontWeight: 400, lineHeight: 1 }}>{num}</strong>
@@ -141,10 +160,10 @@ export default async function HomePage() {
             {[
               ['✅', '100% Verified', 'Every property physically inspected before going live. No fakes. Ever.'],
               ['₹', 'Zero Brokerage', 'Direct owner contact. Save up to ₹1 lakh per deal in Hyderabad.'],
-              ['🔒', 'Safe & Private', 'Phone numbers never shared. Zero spam calls guaranteed.'],
-              ['🤖', 'AI Search', 'Search in Telugu, Hindi or English. Our AI understands your language.'],
-              ['⭐', 'Verified Agents', 'Only 4+ star rated agents can list. Always deal with the best.'],
-              ['📄', 'Digital Agreement', 'E-stamp, e-sign, police verification — all in one place instantly.'],
+              ['🔒', 'Safe & Private', 'Phone numbers never shared publicly. Zero spam calls guaranteed.'],
+              ['🔍', 'Instant Filters', 'Filter by BHK, budget, locality, furnishing, and more. Find exactly what you need.'],
+              ['⭐', 'KYC-Verified Agents', 'Every agent completes identity verification before their first listing goes live.'],
+              ['💬', 'Direct Messaging', 'Chat directly with verified agents inside the platform. No middlemen.'],
             ].map(([icon, title, desc]) => (
               <div key={title as string} style={{ background: 'rgba(255,255,255,0.05)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '28px 24px' }}>
                 <div style={{ fontSize: '30px', marginBottom: '14px' }}>{icon}</div>

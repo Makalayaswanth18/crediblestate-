@@ -101,7 +101,7 @@ export default async function PropertyDetail({
   // JSON-LD structured data for rich Google results
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': p.listing_type === 'rent' ? 'RealEstateListing' : 'Product',
+    '@type': 'RealEstateListing',
     name: p.title,
     description: p.description || `${p.bedrooms ? `${p.bedrooms} BHK ` : ''}${p.property_type} for ${p.listing_type} in ${p.locality}, ${p.city}`,
     url: `https://crediblestate.com/property/${p.slug}`,
@@ -137,16 +137,16 @@ export default async function PropertyDetail({
         }}
       >
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <nav style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', marginBottom: '24px' }}>
+          <nav aria-label="Breadcrumb" style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', marginBottom: '24px' }}>
             <Link href="/" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>Home</Link>
-            <span style={{ margin: '0 8px' }}>/</span>
+            <span aria-hidden="true" style={{ margin: '0 8px' }}>/</span>
             <Link href="/rent" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>Browse</Link>
-            <span style={{ margin: '0 8px' }}>/</span>
-            <span style={{ color: '#fff' }}>{p.title}</span>
+            <span aria-hidden="true" style={{ margin: '0 8px' }}>/</span>
+            <span aria-current="page" style={{ color: '#fff' }}>{p.title}</span>
           </nav>
 
           <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', flexWrap: 'wrap' }}>
-            <span style={{ background: 'rgba(30,77,53,0.92)', padding: '5px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em' }}>✓ VERIFIED</span>
+            <Link href="/verified" style={{ background: 'rgba(30,77,53,0.92)', padding: '5px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em', color: '#fff', textDecoration: 'none' }}>✓ VERIFIED</Link>
             <span style={{ background: p.listing_type === 'rent' ? 'rgba(184,74,30,0.92)' : 'rgba(30,77,53,0.92)', padding: '5px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em' }}>
               FOR {p.listing_type.toUpperCase()}
             </span>
@@ -244,36 +244,59 @@ export default async function PropertyDetail({
           </div>
 
           {/* RIGHT — Contact card */}
-          <aside className="property-aside" style={{ position: 'sticky', top: '84px', background: '#fff', padding: '24px', borderRadius: '20px', border: '0.5px solid #DDD7CF', boxShadow: '0 16px 48px rgba(0,0,0,0.08)' }}>
-            <div style={{ marginBottom: '20px', paddingBottom: '20px', borderBottom: '0.5px solid #EEEAE3' }}>
-              <div style={{ fontSize: '12px', color: '#9C9488', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600, marginBottom: '6px' }}>Listed by</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'linear-gradient(135deg,#B84A1E,#E8732F)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '18px' }}>
-                  {((agent?.full_name ?? p.agent_name) || 'A').charAt(0).toUpperCase()}
-                </div>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontWeight: 600, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                    {agent ? (
-                      <Link href={`/agent/${agent.id}`} style={{ color: '#100E0B', textDecoration: 'none' }}>
-                        {agent.full_name || p.agent_name || 'Agent'}
-                      </Link>
-                    ) : (
-                      <span>{p.agent_name || 'Verified Agent'}</span>
-                    )}
-                    {agent?.is_verified_agent && (
-                      <span title="KYC verified agent" style={{ background: '#EBF5EF', color: '#1E4D35', padding: '1px 7px', borderRadius: '6px', fontSize: '10px', fontWeight: 700, letterSpacing: '0.04em' }}>
-                        ✓ KYC
-                      </span>
-                    )}
+          <aside className="property-aside" style={{ position: 'sticky', top: '84px', background: '#fff', padding: '24px', borderRadius: '20px', border: `0.5px solid ${p.owner_listed ? '#B8DBC6' : '#DDD7CF'}`, boxShadow: '0 16px 48px rgba(0,0,0,0.08)' }}>
+
+            {/* Owner / Agent identity block */}
+            {p.owner_listed ? (
+              <div style={{ background: '#EBF5EF', border: '0.5px solid #B8DBC6', borderRadius: '14px', padding: '16px', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'linear-gradient(135deg,#1E4D35,#27C93F)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '18px', flexShrink: 0 }}>
+                    🏠
                   </div>
-                  <div style={{ fontSize: '12px', color: '#9C9488' }}>
-                    {rating?.rating_avg != null
-                      ? `★ ${rating.rating_avg.toFixed(1)} · ${rating.review_count} review${rating.review_count === 1 ? '' : 's'}`
-                      : 'Responds in 4h · Direct owner'}
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: '14px', color: '#1E4D35', marginBottom: '2px' }}>
+                      Direct from Owner
+                    </div>
+                    <div style={{ fontWeight: 600, fontSize: '15px', color: '#100E0B' }}>
+                      {p.agent_name || 'Property Owner'}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#4A7C5F', marginTop: '2px' }}>
+                      No broker. No commission. You talk to the owner directly.
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div style={{ marginBottom: '20px', paddingBottom: '20px', borderBottom: '0.5px solid #EEEAE3' }}>
+                <div style={{ fontSize: '12px', color: '#9C9488', textTransform: 'uppercase' as const, letterSpacing: '0.06em', fontWeight: 600, marginBottom: '6px' }}>Listed by</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'linear-gradient(135deg,#B84A1E,#E8732F)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '18px' }}>
+                    {((agent?.full_name ?? p.agent_name) || 'A').charAt(0).toUpperCase()}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                      {agent ? (
+                        <Link href={`/agent/${agent.id}`} style={{ color: '#100E0B', textDecoration: 'none' }}>
+                          {agent.full_name || p.agent_name || 'Agent'}
+                        </Link>
+                      ) : (
+                        <span>{p.agent_name || 'Verified Agent'}</span>
+                      )}
+                      {agent?.is_verified_agent && (
+                        <span title="KYC verified agent" style={{ background: '#EBF5EF', color: '#1E4D35', padding: '1px 7px', borderRadius: '6px', fontSize: '10px', fontWeight: 700, letterSpacing: '0.04em' }}>
+                          ✓ KYC
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#9C9488' }}>
+                      {rating?.rating_avg != null
+                        ? `★ ${rating.rating_avg.toFixed(1)} · ${rating.review_count} review${rating.review_count === 1 ? '' : 's'}`
+                        : 'KYC-verified agent'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <a
               href={buildWaLink(p.whatsapp || p.phone, p.title)}
@@ -281,7 +304,7 @@ export default async function PropertyDetail({
               rel="noopener noreferrer"
               style={{ display: 'block', background: '#25D366', color: '#fff', padding: '14px', borderRadius: '11px', textAlign: 'center', fontSize: '15px', fontWeight: 600, textDecoration: 'none', marginBottom: '10px' }}
             >
-              💬 WhatsApp Owner
+              {p.owner_listed ? '💬 WhatsApp Owner Directly' : '💬 WhatsApp Agent'}
             </a>
             {p.phone && (
               <a
@@ -294,8 +317,11 @@ export default async function PropertyDetail({
 
             <InquiryForm propertyId={p.id} propertyTitle={p.title} />
 
-            <div style={{ background: '#FBF0EB', borderRadius: '12px', padding: '14px', fontSize: '12px', color: '#4A4238', lineHeight: 1.55, marginTop: '14px' }}>
-              <strong style={{ color: '#B84A1E' }}>🛡️ CredibleState Promise:</strong> This listing is physically verified. Owner responds within 4 hours. Zero brokerage charged.
+            <div style={{ background: p.owner_listed ? '#EBF5EF' : '#FBF0EB', borderRadius: '12px', padding: '14px', fontSize: '12px', color: '#4A4238', lineHeight: 1.55, marginTop: '14px' }}>
+              {p.owner_listed
+                ? <><strong style={{ color: '#1E4D35' }}>🏠 Owner Listed:</strong> You are contacting the property owner directly. No broker is involved. No commission charged to you.</>
+                : <><strong style={{ color: '#B84A1E' }}>🛡️ CredibleState Promise:</strong> This listing is physically verified. KYC-checked agent. Zero brokerage charged.</>
+              }
             </div>
           </aside>
         </div>

@@ -69,12 +69,12 @@ export default async function LocalityPage({
       <section style={{ background: 'linear-gradient(160deg,#1A120A,#2C1A0E,#0E2218)', padding: '80px 5vw 60px', color: '#fff', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: '-100px', right: '-80px', width: '400px', height: '400px', background: 'radial-gradient(circle,rgba(184,74,30,0.18),transparent 70%)', pointerEvents: 'none' }} />
         <div style={{ maxWidth: '1100px', margin: '0 auto', position: 'relative' }}>
-          <nav style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', marginBottom: '20px' }}>
+          <nav aria-label="Breadcrumb" style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', marginBottom: '20px' }}>
             <Link href="/" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>Home</Link>
-            <span style={{ margin: '0 8px' }}>/</span>
+            <span aria-hidden="true" style={{ margin: '0 8px' }}>/</span>
             <Link href="/rent" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>Browse</Link>
-            <span style={{ margin: '0 8px' }}>/</span>
-            <span style={{ color: '#fff' }}>{loc.name}</span>
+            <span aria-hidden="true" style={{ margin: '0 8px' }}>/</span>
+            <span aria-current="page" style={{ color: '#fff' }}>{loc.name}</span>
           </nav>
 
           <span style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.85)', padding: '5px 14px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'inline-block', marginBottom: '18px' }}>

@@ -59,10 +59,16 @@ export default function PropertyCard({ p, isAgentVerified }: { p: Property; isAg
           )}
 
           {/* Top badges */}
-          <div style={{ position: 'absolute', top: '12px', left: '12px', display: 'flex', gap: '6px' }}>
-            <span style={{ background: 'rgba(30,77,53,0.95)', color: '#fff', padding: '4px 10px', borderRadius: '6px', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em', backdropFilter: 'blur(8px)' }}>
-              ✓ VERIFIED
-            </span>
+          <div style={{ position: 'absolute', top: '12px', left: '12px', display: 'flex', gap: '6px', flexWrap: 'wrap', maxWidth: '70%' }}>
+            {p.owner_listed ? (
+              <span style={{ background: 'rgba(14,34,24,0.97)', color: '#88E5A8', padding: '4px 10px', borderRadius: '6px', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em', backdropFilter: 'blur(8px)', border: '0.5px solid rgba(136,229,168,0.3)' }}>
+                🏠 DIRECT OWNER
+              </span>
+            ) : (
+              <span style={{ background: 'rgba(30,77,53,0.95)', color: '#fff', padding: '4px 10px', borderRadius: '6px', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em', backdropFilter: 'blur(8px)' }}>
+                ✓ VERIFIED
+              </span>
+            )}
             {isFresh && (
               <span style={{ background: 'rgba(184,74,30,0.95)', color: '#fff', padding: '4px 10px', borderRadius: '6px', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em', backdropFilter: 'blur(8px)' }}>
                 NEW
@@ -113,12 +119,18 @@ export default function PropertyCard({ p, isAgentVerified }: { p: Property; isAg
             {p.is_furnished && <span style={chip}>Furnished</span>}
           </div>
           <div style={{ fontSize: '11px', color: '#9C9488', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              by {p.agent_name || 'CredibleState'}
-              {isAgentVerified && (
-                <span title="Verified agent" style={{ color: '#1E4D35', fontSize: '11px' }}>✓</span>
-              )}
-            </span>
+            {p.owner_listed ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#1E4D35', fontWeight: 600 }}>
+                🏠 Direct from Owner
+              </span>
+            ) : (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                by {p.agent_name || 'CredibleState'}
+                {isAgentVerified && (
+                  <span title="Verified agent" style={{ color: '#1E4D35', fontSize: '11px' }}>✓</span>
+                )}
+              </span>
+            )}
             <span>{timeAgo(p.created_at)}</span>
           </div>
         </div>

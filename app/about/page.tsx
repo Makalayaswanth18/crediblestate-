@@ -49,9 +49,12 @@ export default function AboutPage() {
             <span style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.75)', padding: '5px 16px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', border: '0.5px solid rgba(255,255,255,0.15)', display: 'inline-block', marginBottom: '18px' }}>
               How Verification Works
             </span>
-            <h2 style={{ fontFamily: 'var(--font-playfair), serif', fontSize: 'clamp(30px,5vw,42px)', fontWeight: 400, lineHeight: 1.1, letterSpacing: '-0.01em' }}>
+            <h2 style={{ fontFamily: 'var(--font-playfair), serif', fontSize: 'clamp(30px,5vw,42px)', fontWeight: 400, lineHeight: 1.1, letterSpacing: '-0.01em', marginBottom: '12px' }}>
               Every listing goes through <em style={{ color: '#E8732F', fontStyle: 'italic' }}>4 checks</em>
             </h2>
+            <Link href="/verified" style={{ fontSize: '13px', color: '#E8732F', textDecoration: 'none', fontWeight: 500 }}>
+              See the full verification checklist →
+            </Link>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
@@ -79,17 +82,17 @@ export default function AboutPage() {
           <h2 style={sectionTitle}>Our promises to you</h2>
           <div style={{ display: 'grid', gap: '16px' }}>
             {[
-              ['🛡️', 'Zero brokerage. Forever.', 'We don&apos;t charge renters a single rupee. Owners pay nothing too. We make money through optional value-added services like digital agreements and police verification.'],
+              ['🛡️', 'Zero brokerage. Forever.', "We don't charge renters or buyers a single rupee. Listing is also free for owners and agents right now. We may introduce optional tools for agents in the future — we'll give 30 days' notice."],
               ['📵', 'Your phone stays private.', 'We never share your phone number with brokers, marketers, or anyone else. WhatsApp inquiries route through our system — owners only see verified leads.'],
-              ['📸', 'Real photos or no listing.', 'If the photos don&apos;t match the property, the listing is removed and the agent is permanently banned.'],
-              ['⚡', '48-hour move-in promise.', 'For rentals — once you&apos;ve picked a property, we help you complete agreement, deposit, and key handover in 48 hours.'],
+              ['📸', 'Real photos or no listing.', "If the photos don't match the property, the listing is removed and the agent is permanently banned."],
+              ['⚡', '48-hour verification SLA.', "Every property submitted is physically visited by our team within 48 hours. No listing goes live without a real inspection."],
               ['🚫', 'No dark patterns.', 'No bait-and-switch listings. No fake urgency. No fake reviews. No surprise charges. Ever.'],
             ].map(([icon, title, desc]) => (
               <div key={title} style={{ background: '#fff', padding: '24px', borderRadius: '14px', border: '0.5px solid #DDD7CF', display: 'flex', gap: '16px', alignItems: 'start' }}>
                 <div style={{ fontSize: '28px', flexShrink: 0 }}>{icon}</div>
                 <div>
                   <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#100E0B', marginBottom: '6px' }}>{title}</h3>
-                  <p style={{ fontSize: '14px', color: '#4A4238', lineHeight: 1.65 }} dangerouslySetInnerHTML={{ __html: desc }} />
+                  <p style={{ fontSize: '14px', color: '#4A4238', lineHeight: 1.65 }}>{desc}</p>
                 </div>
               </div>
             ))}

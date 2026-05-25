@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { createSupabaseServerClient, getCurrentUser } from '@/lib/supabase-server'
+import { createSupabaseServerClient, getCurrentUserWithProfile } from '@/lib/supabase-server'
 import type { Conversation, Property } from '@/lib/supabase'
 
 export const dynamic = 'force-dynamic'
@@ -10,8 +10,8 @@ type Row = Conversation & {
 }
 
 export default async function AgentInbox() {
-  const user = await getCurrentUser()
-  if (!user) redirect('/signin?intent=agent&next=/agent/messages')
+  const { user, profile } = await getCurrentUserWithProfile()
+  if (!user) redirect('/signin?next=/agent/messages')
 
   const supabase = await createSupabaseServerClient()
   const { data } = await supabase
@@ -28,7 +28,12 @@ export default async function AgentInbox() {
     <>
       <section style={{ background: 'linear-gradient(160deg,#1A120A,#2C1A0E)', padding: '48px 5vw', color: '#fff' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-          <Link href="/agent/dashboard" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textDecoration: 'none' }}>← Back to dashboard</Link>
+          <Link
+            href={profile?.role === 'owner' ? '/owner/dashboard' : '/agent/dashboard'}
+            style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textDecoration: 'none' }}
+          >
+            ← Back to dashboard
+          </Link>
           <h1 style={{ fontFamily: 'var(--font-playfair), serif', fontSize: 'clamp(28px,4vw,40px)', fontWeight: 400, marginTop: '12px', letterSpacing: '-0.01em' }}>
             Inquiries &amp; <em style={{ color: '#E8732F', fontStyle: 'italic' }}>conversations</em>
           </h1>

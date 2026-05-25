@@ -7,11 +7,6 @@ import { redirect } from 'next/navigation'
  * /signin with intent=agent preserved so the UI knows to surface the agent
  * variant of the sign-in form.
  */
-export default function AgentLoginRedirect({
-  searchParams,
-}: {
-  searchParams: Promise<{ next?: string; error?: string }>
-}) {
-  void searchParams // not used here, callers can fall back to /signin defaults
+export default function AgentLoginRedirect() {
   redirect('/signin?intent=agent')
 }

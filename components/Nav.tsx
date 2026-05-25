@@ -9,7 +9,7 @@ export default async function Nav() {
 
   // Decide role for nav surfacing. We don't await getCurrentUserWithProfile here
   // (extra round trip on every page); a lightweight role lookup is enough.
-  let role: 'agent' | 'buyer' = 'buyer'
+  let role: 'agent' | 'buyer' | 'owner' = 'buyer'
   if (user) {
     const { data: prof } = await supabase
       .from('profiles')
@@ -17,6 +17,7 @@ export default async function Nav() {
       .eq('id', user.id)
       .maybeSingle()
     if (prof?.role === 'agent') role = 'agent'
+    else if (prof?.role === 'owner') role = 'owner'
   }
 
   return (
@@ -63,7 +64,7 @@ export default async function Nav() {
 
         {user ? (
           <Link
-            href={role === 'agent' ? '/agent/dashboard' : '/account'}
+            href={role === 'agent' ? '/agent/dashboard' : role === 'owner' ? '/owner/dashboard' : '/account'}
             style={{
               background: '#fff',
               color: '#100E0B',
@@ -74,7 +75,7 @@ export default async function Nav() {
               textDecoration: 'none',
             }}
           >
-            {role === 'agent' ? 'Dashboard' : 'Account'}
+            {role === 'agent' ? 'Dashboard' : role === 'owner' ? 'My Property' : 'Account'}
           </Link>
         ) : (
           <>

@@ -8,6 +8,7 @@ import ImageUpload from '@/components/ImageUpload'
 export default function ListPage() {
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<ListResult | null>(null)
+  const [listerType, setListerType] = useState<'owner' | 'agent'>('owner')
 
   async function handleSubmit(formData: FormData) {
     setSubmitting(true)
@@ -31,11 +32,17 @@ export default function ListPage() {
             Our team will physically verify your property within <strong>24–48 hours</strong>. You&apos;ll get a WhatsApp message once it goes live on CredibleState. Zero brokerage, always.
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="/" style={{ background: '#B84A1E', color: '#fff', padding: '13px 26px', borderRadius: '11px', fontSize: '14px', fontWeight: 600, textDecoration: 'none' }}>
-              Back to Home
-            </Link>
+            {listerType === 'owner' ? (
+              <Link href="/owner/dashboard" style={{ background: '#B84A1E', color: '#fff', padding: '13px 26px', borderRadius: '11px', fontSize: '14px', fontWeight: 600, textDecoration: 'none' }}>
+                Track My Listing →
+              </Link>
+            ) : (
+              <Link href="/agent/dashboard" style={{ background: '#B84A1E', color: '#fff', padding: '13px 26px', borderRadius: '11px', fontSize: '14px', fontWeight: 600, textDecoration: 'none' }}>
+                Go to Dashboard →
+              </Link>
+            )}
             <Link href="/rent" style={{ background: '#F0EBE3', color: '#100E0B', padding: '13px 26px', borderRadius: '11px', fontSize: '14px', fontWeight: 600, textDecoration: 'none' }}>
-              Browse Other Listings
+              Browse Listings
             </Link>
           </div>
         </div>
@@ -48,14 +55,14 @@ export default function ListPage() {
       {/* Hero */}
       <section style={{ background: 'linear-gradient(160deg,#1A120A,#2C1A0E)', padding: '60px 5vw', color: '#fff', textAlign: 'center' }}>
         <div style={{ maxWidth: '720px', margin: '0 auto' }}>
-          <span style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.85)', padding: '6px 16px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'inline-block', marginBottom: '20px' }}>
-            For Owners & Agents
+          <span style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.85)', padding: '6px 16px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em', display: 'inline-block', marginBottom: '20px' }}>
+            List Your Property
           </span>
           <h1 style={{ fontFamily: 'var(--font-playfair), serif', fontSize: 'clamp(32px,5vw,48px)', fontWeight: 400, marginBottom: '14px', letterSpacing: '-0.01em' }}>
             List Your Property — <em style={{ color: '#E8732F', fontStyle: 'italic' }}>100% Free</em>
           </h1>
           <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.65 }}>
-            Fill in the basics — we verify your property in person within 48 hours, then publish it to thousands of verified renters and buyers across Hyderabad.
+            Fill in the basics — we verify your property in person within 48 hours, then publish it to verified buyers across Hyderabad.
           </p>
         </div>
       </section>
@@ -64,8 +71,79 @@ export default function ListPage() {
       <section style={{ padding: '64px 5vw 96px', background: '#FAF7F2' }}>
         <form
           action={handleSubmit}
-          style={{ maxWidth: '720px', margin: '0 auto', background: '#fff', padding: '40px', borderRadius: '20px', border: '0.5px solid #DDD7CF', display: 'grid', gap: '20px' }}
+          style={{ maxWidth: '720px', margin: '0 auto', background: '#fff', padding: '40px', borderRadius: '20px', border: '0.5px solid #DDD7CF', display: 'grid', gap: '24px' }}
         >
+
+          {/* Who are you? */}
+          <div>
+            <h3 style={{ fontFamily: 'var(--font-playfair), serif', fontSize: '20px', fontWeight: 400, marginBottom: '14px', color: '#100E0B', borderBottom: '0.5px solid #EEEAE3', paddingBottom: '10px' }}>
+              Who is listing this property?
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <button
+                type="button"
+                onClick={() => setListerType('owner')}
+                style={{
+                  padding: '18px 16px',
+                  borderRadius: '12px',
+                  border: listerType === 'owner' ? '2px solid #B84A1E' : '1px solid #DDD7CF',
+                  background: listerType === 'owner' ? '#FBF0EB' : '#FAF7F2',
+                  cursor: 'pointer',
+                  textAlign: 'left' as const,
+                  transition: 'all 0.15s',
+                }}
+              >
+                <div style={{ fontSize: '22px', marginBottom: '6px' }}>🏠</div>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: listerType === 'owner' ? '#B84A1E' : '#100E0B', marginBottom: '4px' }}>
+                  I own this property
+                </div>
+                <div style={{ fontSize: '12px', color: '#9C9488', lineHeight: 1.5 }}>
+                  Direct from owner. Buyers contact you with zero brokerage.
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setListerType('agent')}
+                style={{
+                  padding: '18px 16px',
+                  borderRadius: '12px',
+                  border: listerType === 'agent' ? '2px solid #B84A1E' : '1px solid #DDD7CF',
+                  background: listerType === 'agent' ? '#FBF0EB' : '#FAF7F2',
+                  cursor: 'pointer',
+                  textAlign: 'left' as const,
+                  transition: 'all 0.15s',
+                }}
+              >
+                <div style={{ fontSize: '22px', marginBottom: '6px' }}>🤝</div>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: listerType === 'agent' ? '#B84A1E' : '#100E0B', marginBottom: '4px' }}>
+                  I&apos;m an agent / broker
+                </div>
+                <div style={{ fontSize: '12px', color: '#9C9488', lineHeight: 1.5 }}>
+                  Listing on behalf of an owner. No commission charged to buyers.
+                </div>
+              </button>
+            </div>
+
+            {listerType === 'owner' && (
+              <div style={{ marginTop: '12px', background: '#EBF5EF', border: '0.5px solid #B8DBC6', borderRadius: '10px', padding: '12px 16px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                <span style={{ fontSize: '18px', flexShrink: 0 }}>✓</span>
+                <div style={{ fontSize: '13px', color: '#1E4D35', lineHeight: 1.6 }}>
+                  Your listing will show a <strong>Direct from Owner</strong> badge. Buyers know they&apos;re talking to you directly — no middleman.
+                </div>
+              </div>
+            )}
+            {listerType === 'agent' && (
+              <div style={{ marginTop: '12px', background: '#FBF0EB', border: '0.5px solid #F5C9A0', borderRadius: '10px', padding: '12px 16px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                <span style={{ fontSize: '18px', flexShrink: 0 }}>⚠️</span>
+                <div style={{ fontSize: '13px', color: '#92400E', lineHeight: 1.6 }}>
+                  By submitting, you agree that <strong>zero brokerage</strong> will be charged to buyers or renters. Any violation results in permanent removal.
+                </div>
+              </div>
+            )}
+            {/* Hidden field passed to action */}
+            <input type="hidden" name="owner_listed" value={listerType === 'owner' ? 'true' : 'false'} />
+          </div>
+
           <Section title="Property details">
             <Field label="Listing title *" name="title" placeholder="e.g., 2BHK Furnished Flat in Kondapur" required />
             <Row>
@@ -108,14 +186,19 @@ export default function ListPage() {
             </div>
           </Section>
 
-          <Section title="Your contact">
+          <Section title={listerType === 'owner' ? 'Your contact (as owner)' : 'Your contact (as agent)'}>
             <Row>
-              <Field label="Your name *" name="agent_name" placeholder="Ramesh Kumar" required />
+              <Field
+                label={listerType === 'owner' ? 'Your name *' : 'Agent name *'}
+                name="agent_name"
+                placeholder="Ramesh Kumar"
+                required
+              />
               <Field label="Phone *" name="phone" type="tel" placeholder="+919876543210" required />
             </Row>
             <Field label="WhatsApp (if different)" name="whatsapp" type="tel" placeholder="+919876543210" />
             <p style={{ fontSize: '12px', color: '#9C9488', lineHeight: 1.6 }}>
-              Your phone is hidden from the public. Renters contact you only via the WhatsApp button on your verified listing.
+              Your phone is hidden from public view. Buyers contact you only via the platform messaging or WhatsApp button on your verified listing.
             </p>
           </Section>
 
@@ -209,7 +292,8 @@ function Select({
   return (
     <label style={{ display: 'block' }}>
       <div style={{ fontSize: '12px', fontWeight: 600, color: '#4A4238', marginBottom: '6px' }}>{label}</div>
-      <select name={name} required={required} style={inputBase}>
+      <select name={name} required={required} defaultValue="" style={inputBase}>
+        {required && <option value="" disabled>Select one…</option>}
         {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
       </select>
     </label>

@@ -24,7 +24,11 @@ function redirectWithNoStore(url: URL): NextResponse {
 export async function GET(request: NextRequest) {
   const url = new URL(request.url)
   const code = url.searchParams.get('code')
-  const next = url.searchParams.get('next') || ''
+  // Validate next= to prevent open-redirect: only allow same-origin relative paths.
+  // new URL(absoluteUrl, origin) ignores the base for absolute URLs, so an attacker
+  // could pass next=https://evil.com and land the user there post-auth.
+  const rawNext = url.searchParams.get('next') || ''
+  const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : ''
   const intent = url.searchParams.get('intent')
 
   if (!code) {

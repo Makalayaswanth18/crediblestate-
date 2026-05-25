@@ -20,6 +20,7 @@ type SearchParams = {
   furnished?: string
   parking?: string
   gated?: string
+  owner_only?: string
   sort?: string
 }
 
@@ -92,6 +93,7 @@ export default async function RentPage({
   if (params.furnished === 'yes') query = query.eq('is_furnished', true)
   if (params.parking === 'yes') query = query.eq('has_parking', true)
   if (params.gated === 'yes') query = query.eq('is_gated', true)
+  if (params.owner_only === 'yes') query = query.eq('owner_listed', true)
   if (params.q) {
     query = query.or(
       `title.ilike.%${params.q}%,description.ilike.%${params.q}%,locality.ilike.%${params.q}%`,
@@ -118,12 +120,14 @@ export default async function RentPage({
     furnished: params.furnished === 'yes' ? 'yes' : undefined,
     parking: params.parking === 'yes' ? 'yes' : undefined,
     gated: params.gated === 'yes' ? 'yes' : undefined,
+    owner_only: params.owner_only === 'yes' ? 'yes' : undefined,
   }
 
   const hasAnyFilter =
     !!params.q || !!params.type || !!params.property_type || localityList.length > 0 ||
     !!params.bhk || !!params.min || !!params.max ||
-    params.furnished === 'yes' || params.parking === 'yes' || params.gated === 'yes'
+    params.furnished === 'yes' || params.parking === 'yes' || params.gated === 'yes' ||
+    params.owner_only === 'yes'
 
   return (
     <>
@@ -224,11 +228,12 @@ export default async function RentPage({
               </div>
             </div>
 
-            {/* Amenity toggles */}
+            {/* Amenity + owner toggles */}
             <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
-              <CheckChip name="furnished" defaultChecked={params.furnished === 'yes'} label="🛋️ Furnished" />
-              <CheckChip name="parking"   defaultChecked={params.parking   === 'yes'} label="🚗 Parking" />
-              <CheckChip name="gated"     defaultChecked={params.gated     === 'yes'} label="🔒 Gated" />
+              <CheckChip name="owner_only" defaultChecked={params.owner_only === 'yes'} label="🏠 Owner Only" highlight />
+              <CheckChip name="furnished"  defaultChecked={params.furnished  === 'yes'} label="🛋️ Furnished" />
+              <CheckChip name="parking"    defaultChecked={params.parking    === 'yes'} label="🚗 Parking" />
+              <CheckChip name="gated"      defaultChecked={params.gated      === 'yes'} label="🔒 Gated" />
             </div>
 
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
@@ -302,7 +307,8 @@ export default async function RentPage({
   )
 }
 
-function CheckChip({ name, defaultChecked, label }: { name: string; defaultChecked: boolean; label: string }) {
+function CheckChip({ name, defaultChecked, label, highlight }: { name: string; defaultChecked: boolean; label: string; highlight?: boolean }) {
+  const activeColor = highlight ? '#B84A1E' : '#1E4D35'
   return (
     <label style={{
       display: 'inline-flex',
@@ -311,11 +317,11 @@ function CheckChip({ name, defaultChecked, label }: { name: string; defaultCheck
       padding: '8px 14px',
       borderRadius: '20px',
       fontSize: '13px',
-      fontWeight: 500,
+      fontWeight: highlight ? 600 : 500,
       cursor: 'pointer',
-      background: defaultChecked ? '#1E4D35' : 'rgba(255,255,255,0.08)',
-      color: defaultChecked ? '#fff' : 'rgba(255,255,255,0.85)',
-      border: '0.5px solid ' + (defaultChecked ? '#1E4D35' : 'rgba(255,255,255,0.18)'),
+      background: defaultChecked ? activeColor : 'rgba(255,255,255,0.08)',
+      color: defaultChecked ? '#fff' : highlight ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.85)',
+      border: '0.5px solid ' + (defaultChecked ? activeColor : highlight ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.18)'),
     }}>
       <input type="checkbox" name={name} value="yes" defaultChecked={defaultChecked} style={{ display: 'none' }} />
       {label}

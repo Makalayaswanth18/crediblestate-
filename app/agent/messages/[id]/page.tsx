@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
-import { createSupabaseServerClient, getCurrentUser } from '@/lib/supabase-server'
+import { createSupabaseServerClient, getCurrentUserWithProfile } from '@/lib/supabase-server'
 import type { Conversation, Message, Property } from '@/lib/supabase'
 import { formatPrice, buildWaLink } from '@/lib/format'
 import MessageThread from '@/components/MessageThread'
@@ -14,8 +14,8 @@ export default async function AgentThread({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const user = await getCurrentUser()
-  if (!user) redirect(`/signin?intent=agent&next=/agent/messages/${id}`)
+  const { user, profile } = await getCurrentUserWithProfile()
+  if (!user) redirect(`/signin?next=/agent/messages/${id}`)
 
   const supabase = await createSupabaseServerClient()
 
@@ -50,7 +50,9 @@ export default async function AgentThread({
     <>
       <section style={{ background: 'linear-gradient(160deg,#1A120A,#2C1A0E)', padding: '32px 5vw', color: '#fff' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-          <Link href="/agent/messages" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textDecoration: 'none' }}>← All inquiries</Link>
+          <Link href="/agent/messages" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textDecoration: 'none' }}>
+            ← {profile?.role === 'owner' ? 'All inquiries' : 'All inquiries'}
+          </Link>
           <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', marginTop: '12px', flexWrap: 'wrap', justifyContent: 'space-between' }}>
             <div style={{ flex: '1 1 280px', minWidth: 0 }}>
               <h1 style={{ fontFamily: 'var(--font-playfair), serif', fontSize: 'clamp(20px,3vw,28px)', fontWeight: 400, marginBottom: '6px' }}>

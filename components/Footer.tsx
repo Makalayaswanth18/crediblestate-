@@ -41,14 +41,18 @@ export default function Footer() {
           <div>
             <h4 style={footerHeading}>Contact</h4>
             <a href="mailto:hello@crediblestate.com" style={footerLink}>hello@crediblestate.com</a>
-            <a href="https://wa.me/919876543210" style={footerLink}>WhatsApp Support</a>
+            <a href="mailto:hello@crediblestate.com" style={footerLink}>Contact Support</a>
             <p style={{ ...footerLink, color: '#4A4238' }}>Hyderabad, Telangana 🇮🇳</p>
           </div>
         </div>
 
-        <div style={{ borderTop: '0.5px solid rgba(255,255,255,0.08)', paddingTop: '24px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+        <div style={{ borderTop: '0.5px solid rgba(255,255,255,0.08)', paddingTop: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <p style={{ fontSize: '12px', color: '#4A4238' }}>© 2026 CredibleState Technologies. All rights reserved.</p>
-          <p style={{ fontSize: '12px', color: '#4A4238' }}>Made with ♥ in Hyderabad</p>
+          <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <Link href="/privacy" style={{ fontSize: '12px', color: '#4A4238', textDecoration: 'none' }}>Privacy Policy</Link>
+            <Link href="/terms" style={{ fontSize: '12px', color: '#4A4238', textDecoration: 'none' }}>Terms of Service</Link>
+            <p style={{ fontSize: '12px', color: '#4A4238', margin: 0 }}>Made with ♥ in Hyderabad</p>
+          </div>
         </div>
       </div>
     </footer>

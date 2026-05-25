@@ -35,6 +35,7 @@ export async function submitProperty(formData: FormData): Promise<ListResult> {
   const agent_name = String(formData.get('agent_name') || '').trim()
   const phone = String(formData.get('phone') || '').trim()
   const whatsapp = String(formData.get('whatsapp') || phone).trim()
+  const owner_listed = formData.get('owner_listed') === 'true'
 
   if (!title || !locality || !price || !agent_name || !phone) {
     return { ok: false, error: 'Please fill in title, locality, price, your name, and phone.' }
@@ -47,9 +48,18 @@ export async function submitProperty(formData: FormData): Promise<ListResult> {
 
   const slug = `${slugBase}-${Date.now().toString().slice(-5)}`
 
-  // If agent is logged in, link the listing to them
+  // Link to signed-in user; if they're listing as owner, promote their role
   const ssr = await createSupabaseServerClient()
   const { data: { user } } = await ssr.auth.getUser()
+
+  if (user && owner_listed) {
+    // Promote buyer → owner (never downgrade an agent)
+    await ssr
+      .from('profiles')
+      .update({ role: 'owner' })
+      .eq('id', user.id)
+      .eq('role', 'buyer')
+  }
 
   const { error } = await supabase.from('properties').insert({
     slug,
@@ -72,6 +82,7 @@ export async function submitProperty(formData: FormData): Promise<ListResult> {
     agent_name,
     phone,
     whatsapp,
+    owner_listed,
     status: 'pending',
     agent_id: user?.id || null,
   })
