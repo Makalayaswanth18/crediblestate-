@@ -57,11 +57,19 @@ export default async function RentPage({
   else if (params.sort === 'newest') { sortField = 'created_at'; sortAsc = false }
   else if (params.sort === 'oldest') { sortField = 'created_at'; sortAsc = true }
 
+  // Pagination — cap each page at 60 listings to keep the page snappy as the
+  // listing count grows. Defaults to page 1 if missing/invalid.
+  const PAGE_SIZE = 60
+  const pageNum = Math.max(1, Math.min(100, Number((params as { page?: string }).page) || 1))
+  const rangeStart = (pageNum - 1) * PAGE_SIZE
+  const rangeEnd = rangeStart + PAGE_SIZE - 1
+
   let query = supabase
     .from('properties')
     .select('*')
     .eq('status', 'verified')
     .order(sortField, { ascending: sortAsc })
+    .range(rangeStart, rangeEnd)
 
   if (params.type === 'rent' || params.type === 'sale') {
     query = query.eq('listing_type', params.type)
@@ -70,11 +78,18 @@ export default async function RentPage({
     query = query.eq('property_type', params.property_type)
   }
   if (localityList.length > 0) {
-    // ilike OR across all selected localities
-    const orExpr = localityList
-      .map((loc) => `locality.ilike.%${loc.replace(/[,]/g, '')}%`)
-      .join(',')
-    query = query.or(orExpr)
+    // SAFETY: any chars with meaning in PostgREST filter syntax must be stripped.
+    // `,` separates OR conditions, `()` groups, `.` separates column.op.value, `*`
+    // is wildcard, `:` is range. We strip all of them so user input can't break
+    // out of the ilike value.
+    const safe = (s: string) => s.replace(/[,.()*:'"\\%]/g, '').slice(0, 60)
+    const cleanedLocalities = localityList.map(safe).filter(Boolean)
+    if (cleanedLocalities.length > 0) {
+      const orExpr = cleanedLocalities
+        .map((loc) => `locality.ilike.%${loc}%`)
+        .join(',')
+      query = query.or(orExpr)
+    }
   }
   if (params.bhk) {
     if (params.bhk === '4+') {
@@ -95,9 +110,13 @@ export default async function RentPage({
   if (params.gated === 'yes') query = query.eq('is_gated', true)
   if (params.owner_only === 'yes') query = query.eq('owner_listed', true)
   if (params.q) {
-    query = query.or(
-      `title.ilike.%${params.q}%,description.ilike.%${params.q}%,locality.ilike.%${params.q}%`,
-    )
+    // SAFETY: strip PostgREST-meaningful characters from the search query
+    const cleanQ = params.q.replace(/[,.()*:'"\\%]/g, '').trim().slice(0, 80)
+    if (cleanQ) {
+      query = query.or(
+        `title.ilike.%${cleanQ}%,description.ilike.%${cleanQ}%,locality.ilike.%${cleanQ}%`,
+      )
+    }
   }
 
   let properties: Property[] = []

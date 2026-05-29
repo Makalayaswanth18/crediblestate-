@@ -30,11 +30,20 @@ export async function submitInquiry(propertyId: string, formData: FormData): Pro
   if (!name || !phone) {
     return { ok: false, error: 'Please share your name and phone so the owner can reach you.' }
   }
-  if (!/^\+?[0-9\s-]{10,15}$/.test(phone)) {
-    return { ok: false, error: 'Please enter a valid phone number.' }
+  // Indian mobile validation — must be a real-looking number
+  // Strip spaces/dashes/+91 prefix, then expect exactly 10 digits starting with 6-9
+  const digits = phone.replace(/[\s\-()+]/g, '').replace(/^(91|0)/, '')
+  if (!/^[6-9]\d{9}$/.test(digits)) {
+    return { ok: false, error: 'Please enter a valid 10-digit Indian mobile number.' }
   }
-  if (!message) {
-    return { ok: false, error: 'Please write a quick message.' }
+  if (!message || message.length < 5) {
+    return { ok: false, error: 'Please write a short message (at least a few words).' }
+  }
+  if (message.length > 2000) {
+    return { ok: false, error: 'Message is too long. Please keep it under 2000 characters.' }
+  }
+  if (name.length > 100) {
+    return { ok: false, error: 'Name is too long.' }
   }
 
   // Look up the property (need agent_id even though it's not exposed publicly).

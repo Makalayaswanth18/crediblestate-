@@ -12,11 +12,13 @@ export default async function AdminPendingPage() {
   if (!admin) redirect('/signin?next=/admin/pending')
 
   const supabase = await createSupabaseServerClient()
+  // Cap at 100 — if you ever have more than 100 pending you have a bigger problem
   const { data: pending } = await supabase
     .from('properties')
     .select('*')
     .eq('status', 'pending')
     .order('created_at', { ascending: true })
+    .limit(100)
 
   const items = (pending as Property[]) || []
 

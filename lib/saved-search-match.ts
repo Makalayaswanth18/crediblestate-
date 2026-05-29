@@ -22,10 +22,12 @@ export function applySavedSearchFilters(query: any, filters: SavedSearchFilters)
     query = query.eq('property_type', filters.property_type)
   }
   if (filters.localities && filters.localities.length > 0) {
-    const orExpr = filters.localities
-      .map((loc) => `locality.ilike.%${loc.replace(/[,]/g, '')}%`)
-      .join(',')
-    query = query.or(orExpr)
+    const safe = (s: string) => s.replace(/[,.()*:'"\\%]/g, '').slice(0, 60)
+    const cleaned = filters.localities.map(safe).filter(Boolean)
+    if (cleaned.length > 0) {
+      const orExpr = cleaned.map((loc) => `locality.ilike.%${loc}%`).join(',')
+      query = query.or(orExpr)
+    }
   }
   if (filters.bhk) {
     if (filters.bhk === '4+') {
@@ -41,9 +43,12 @@ export function applySavedSearchFilters(query: any, filters: SavedSearchFilters)
   if (filters.parking === 'yes') query = query.eq('has_parking', true)
   if (filters.gated === 'yes') query = query.eq('is_gated', true)
   if (filters.q) {
-    query = query.or(
-      `title.ilike.%${filters.q}%,description.ilike.%${filters.q}%,locality.ilike.%${filters.q}%`,
-    )
+    const cleanQ = filters.q.replace(/[,.()*:'"\\%]/g, '').trim().slice(0, 80)
+    if (cleanQ) {
+      query = query.or(
+        `title.ilike.%${cleanQ}%,description.ilike.%${cleanQ}%,locality.ilike.%${cleanQ}%`,
+      )
+    }
   }
   return query
 }
