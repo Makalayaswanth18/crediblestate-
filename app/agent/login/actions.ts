@@ -65,7 +65,10 @@ export async function verifyEmailOtp(
   const cleanEmail = email.trim().toLowerCase()
   const cleanToken = token.trim().replace(/\s+/g, '')
   if (!cleanEmail.includes('@')) return { ok: false, error: 'Invalid email.' }
-  if (cleanToken.length !== 6) return { ok: false, error: 'Enter the 6-digit code from your email.' }
+  // Supabase OTP code length is configurable (4–10 digits). Accept anything in range.
+  if (cleanToken.length < 4 || cleanToken.length > 10 || !/^\d+$/.test(cleanToken)) {
+    return { ok: false, error: 'Enter the code from your email (digits only).' }
+  }
 
   const supabase = await createSupabaseServerClient()
   const { error } = await supabase.auth.verifyOtp({

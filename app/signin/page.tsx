@@ -78,7 +78,7 @@ function SignInForm() {
                 Enter the code
               </h1>
               <p style={{ fontSize: '14px', color: '#4A4238', lineHeight: 1.6 }}>
-                We emailed a <strong>6-digit code</strong> to <strong>{email}</strong>.
+                We emailed a <strong>verification code</strong> to <strong>{email}</strong>.
                 <br />
                 Open the email and type the code below.
               </p>
@@ -90,17 +90,17 @@ function SignInForm() {
                 inputMode="numeric"
                 autoComplete="one-time-code"
                 pattern="[0-9]*"
-                maxLength={6}
+                maxLength={10}
                 required
                 value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="123456"
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                placeholder="••••••"
                 autoFocus
                 style={{
                   width: '100%',
                   padding: '18px 16px',
                   fontSize: '24px',
-                  letterSpacing: '0.4em',
+                  letterSpacing: '0.3em',
                   textAlign: 'center',
                   border: '1px solid #DDD7CF',
                   borderRadius: '11px',
@@ -121,17 +121,17 @@ function SignInForm() {
 
               <button
                 type="submit"
-                disabled={verifying || code.length !== 6}
+                disabled={verifying || code.length < 4}
                 style={{
                   width: '100%',
-                  background: verifying || code.length !== 6 ? '#9C9488' : '#B84A1E',
+                  background: verifying || code.length < 4 ? '#9C9488' : '#B84A1E',
                   color: '#fff',
                   border: 'none',
                   padding: '14px',
                   borderRadius: '11px',
                   fontSize: '15px',
                   fontWeight: 600,
-                  cursor: verifying || code.length !== 6 ? 'not-allowed' : 'pointer',
+                  cursor: verifying || code.length < 4 ? 'not-allowed' : 'pointer',
                   marginBottom: '14px',
                 }}
               >
