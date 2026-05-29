@@ -46,22 +46,51 @@ export default async function AdminPendingPage() {
             </div>
           ) : (
             <div style={{ display: 'grid', gap: '16px' }}>
-              {items.map((p) => (
+              {items.map((p) => {
+                const photos = (p.images || []).filter(Boolean)
+                return (
                 <div key={p.id} style={{ background: '#fff', padding: '24px', borderRadius: '16px', border: '0.5px solid #DDD7CF' }}>
                   <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
                     <div style={{ flex: '1 1 320px', minWidth: 0 }}>
-                      <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                      <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
                         <span style={{ background: '#FBF0EB', color: '#B84A1E', padding: '3px 10px', borderRadius: '6px', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em' }}>
                           {p.property_type.toUpperCase()}
                         </span>
                         <span style={{ background: p.listing_type === 'rent' ? 'rgba(184,74,30,0.15)' : 'rgba(30,77,53,0.15)', color: p.listing_type === 'rent' ? '#B84A1E' : '#1E4D35', padding: '3px 10px', borderRadius: '6px', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em' }}>
                           FOR {p.listing_type.toUpperCase()}
                         </span>
+                        {p.owner_listed && (
+                          <span style={{ background: 'rgba(14,34,24,0.95)', color: '#88E5A8', padding: '3px 10px', borderRadius: '6px', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em', border: '0.5px solid rgba(136,229,168,0.3)' }}>
+                            🏠 OWNER LISTED
+                          </span>
+                        )}
                       </div>
                       <h3 style={{ fontSize: '17px', fontWeight: 600, marginBottom: '6px' }}>{p.title}</h3>
                       <p style={{ fontSize: '13px', color: '#9C9488', marginBottom: '10px' }}>
                         📍 {p.address || `${p.locality}, ${p.city}`}
                       </p>
+
+                      {/* Photo gallery for admin review */}
+                      <div style={{ marginBottom: '14px' }}>
+                        <div style={{ fontSize: '11px', color: '#9C9488', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, marginBottom: '6px' }}>
+                          Photos ({photos.length})
+                        </div>
+                        {photos.length === 0 ? (
+                          <div style={{ background: '#FEF2F2', border: '1px dashed #FCA5A5', borderRadius: '10px', padding: '20px', textAlign: 'center', color: '#991B1B', fontSize: '13px' }}>
+                            ⚠️ No photos uploaded — request photos before approving
+                          </div>
+                        ) : (
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '6px' }}>
+                            {photos.map((url, i) => (
+                              <a key={i} href={url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', aspectRatio: '4/3', borderRadius: '8px', overflow: 'hidden', background: '#F0EBE3', border: '0.5px solid #DDD7CF' }} title="Click to view full size">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={url} alt={`Photo ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px', fontSize: '13px', marginBottom: '14px', padding: '12px', background: '#FAF7F2', borderRadius: '10px' }}>
                         <div><strong>Price:</strong> {formatPrice(Number(p.price))}{p.listing_type === 'rent' ? '/mo' : ''}</div>
                         {p.area_sqft && <div><strong>Area:</strong> {p.area_sqft} sqft</div>}
@@ -91,7 +120,8 @@ export default async function AdminPendingPage() {
                     </div>
                   </div>
                 </div>
-              ))}
+                )
+              })}
             </div>
           )}
 
