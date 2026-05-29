@@ -35,6 +35,49 @@ function toArray(v: string | string[] | undefined): string[] {
   return Array.isArray(v) ? v : [v]
 }
 
+const PAGE_SIZE = 60
+
+/**
+ * Build a HEAD-only count query that mirrors the filters of the main listing
+ * query, so we know the total number of matching rows for pagination.
+ */
+function buildCountQuery(params: SearchParams, localityList: string[]) {
+  let q = supabase
+    .from('properties')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'verified')
+
+  if (params.type === 'rent' || params.type === 'sale') q = q.eq('listing_type', params.type)
+  if (params.property_type) q = q.eq('property_type', params.property_type)
+  if (localityList.length > 0) {
+    const safe = (s: string) => s.replace(/[,.()*:'"\\%]/g, '').slice(0, 60)
+    const cleaned = localityList.map(safe).filter(Boolean)
+    if (cleaned.length > 0) {
+      q = q.or(cleaned.map((loc) => `locality.ilike.%${loc}%`).join(','))
+    }
+  }
+  if (params.bhk) {
+    if (params.bhk === '4+') q = q.gte('bedrooms', 4)
+    else {
+      const n = Number(params.bhk)
+      if (Number.isFinite(n)) q = q.eq('bedrooms', n)
+    }
+  }
+  if (params.min) q = q.gte('price', Number(params.min))
+  if (params.max) q = q.lte('price', Number(params.max))
+  if (params.furnished === 'yes') q = q.eq('is_furnished', true)
+  if (params.parking === 'yes') q = q.eq('has_parking', true)
+  if (params.gated === 'yes') q = q.eq('is_gated', true)
+  if (params.owner_only === 'yes') q = q.eq('owner_listed', true)
+  if (params.q) {
+    const cleanQ = params.q.replace(/[,.()*:'"\\%]/g, '').trim().slice(0, 80)
+    if (cleanQ) {
+      q = q.or(`title.ilike.%${cleanQ}%,description.ilike.%${cleanQ}%,locality.ilike.%${cleanQ}%`)
+    }
+  }
+  return q
+}
+
 export default async function RentPage({
   searchParams,
 }: {
@@ -57,9 +100,7 @@ export default async function RentPage({
   else if (params.sort === 'newest') { sortField = 'created_at'; sortAsc = false }
   else if (params.sort === 'oldest') { sortField = 'created_at'; sortAsc = true }
 
-  // Pagination — cap each page at 60 listings to keep the page snappy as the
-  // listing count grows. Defaults to page 1 if missing/invalid.
-  const PAGE_SIZE = 60
+  // Pagination — cap each page at PAGE_SIZE listings.
   const pageNum = Math.max(1, Math.min(100, Number((params as { page?: string }).page) || 1))
   const rangeStart = (pageNum - 1) * PAGE_SIZE
   const rangeEnd = rangeStart + PAGE_SIZE - 1
@@ -119,13 +160,21 @@ export default async function RentPage({
     }
   }
 
+  // Run data fetch + total count in parallel so we know how many pages exist
   let properties: Property[] = []
+  let totalCount = 0
   try {
-    const { data } = await query
+    const [{ data }, { count }] = await Promise.all([
+      query,
+      buildCountQuery(params, localityList),
+    ])
     properties = (data as Property[]) || []
+    totalCount = count ?? 0
   } catch {
     properties = []
   }
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
 
   // Build the filters blob we'll hand to the SaveSearchButton
   const filtersForSave: SavedSearchFilters = {
@@ -314,16 +363,108 @@ export default async function RentPage({
               </Link>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: '24px' }}>
-              {properties.map((p) => (
-                <PropertyCard key={p.id} p={p} />
-              ))}
-            </div>
+            <>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: '24px' }}>
+                {properties.map((p) => (
+                  <PropertyCard key={p.id} p={p} />
+                ))}
+              </div>
+              {totalPages > 1 && (
+                <Pagination
+                  currentPage={pageNum}
+                  totalPages={totalPages}
+                  totalCount={totalCount}
+                  searchParams={params}
+                />
+              )}
+            </>
           )}
         </div>
       </section>
     </>
   )
+}
+
+/** Pagination — render a row of "← Prev | 1 2 3 … | Next →" links. */
+function Pagination({
+  currentPage,
+  totalPages,
+  totalCount,
+  searchParams,
+}: {
+  currentPage: number
+  totalPages: number
+  totalCount: number
+  searchParams: SearchParams
+}) {
+  // Build the base URL with all current filters preserved
+  const baseParams = new URLSearchParams()
+  for (const [k, v] of Object.entries(searchParams)) {
+    if (k === 'page' || v == null) continue
+    if (Array.isArray(v)) v.forEach((vv) => baseParams.append(k, vv))
+    else baseParams.set(k, String(v))
+  }
+  const linkFor = (page: number) => {
+    const sp = new URLSearchParams(baseParams)
+    if (page > 1) sp.set('page', String(page))
+    const qs = sp.toString()
+    return `/rent${qs ? '?' + qs : ''}`
+  }
+
+  // Build the visible page numbers: 1, ..., current-1, current, current+1, ..., last
+  const visible = new Set<number>([1, totalPages, currentPage, currentPage - 1, currentPage + 1])
+  const pages = Array.from(visible).filter((p) => p >= 1 && p <= totalPages).sort((a, b) => a - b)
+
+  return (
+    <nav
+      aria-label="Pagination"
+      style={{
+        display: 'flex', gap: '8px', flexWrap: 'wrap',
+        justifyContent: 'center', alignItems: 'center',
+        marginTop: '48px', paddingTop: '32px',
+        borderTop: '0.5px solid #EEEAE3',
+      }}
+    >
+      <span style={{ fontSize: '13px', color: '#9C9488', marginRight: '8px' }}>
+        Page {currentPage} of {totalPages} · {totalCount} total
+      </span>
+
+      {currentPage > 1 && (
+        <Link href={linkFor(currentPage - 1)} style={pageBtn(false)}>← Prev</Link>
+      )}
+
+      {pages.map((p, i) => {
+        const prev = pages[i - 1]
+        const showEllipsis = prev != null && p - prev > 1
+        return (
+          <span key={p} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+            {showEllipsis && <span style={{ color: '#9C9488', fontSize: '13px' }}>…</span>}
+            <Link href={linkFor(p)} style={pageBtn(p === currentPage)}>{p}</Link>
+          </span>
+        )
+      })}
+
+      {currentPage < totalPages && (
+        <Link href={linkFor(currentPage + 1)} style={pageBtn(false)}>Next →</Link>
+      )}
+    </nav>
+  )
+}
+
+function pageBtn(active: boolean): React.CSSProperties {
+  return {
+    padding: '8px 14px',
+    borderRadius: '8px',
+    fontSize: '13px',
+    fontWeight: 600,
+    textDecoration: 'none',
+    background: active ? '#B84A1E' : '#fff',
+    color: active ? '#fff' : '#100E0B',
+    border: '0.5px solid ' + (active ? '#B84A1E' : '#DDD7CF'),
+    minWidth: '40px',
+    textAlign: 'center' as const,
+    display: 'inline-block',
+  }
 }
 
 function CheckChip({ name, defaultChecked, label, highlight }: { name: string; defaultChecked: boolean; label: string; highlight?: boolean }) {

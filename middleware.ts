@@ -19,6 +19,36 @@ export async function middleware(request: NextRequest) {
 
     let supabaseResponse = NextResponse.next({ request })
 
+    const path = request.nextUrl.pathname
+
+    // Fast-path: if there's no Supabase auth cookie at all, the user isn't
+    // signed in. For protected routes, skip the network round-trip — they get
+    // redirected to /signin anyway. For public routes, just pass through.
+    const hasAuthCookie = request.cookies.getAll().some(
+      (c) => c.name.startsWith('sb-') && c.name.includes('auth-token'),
+    )
+
+    const PROTECTED_AGENT_SEGMENTS = ['dashboard', 'inquiries', 'messages']
+    const agentMatch = path.match(/^\/agent\/([^/]+)/)
+    const isProtectedAgentRoute = !!(
+      agentMatch && PROTECTED_AGENT_SEGMENTS.includes(agentMatch[1])
+    )
+    const isProtected = isProtectedAgentRoute
+      || path.startsWith('/account')
+      || path.startsWith('/messages')
+      || path.startsWith('/admin')
+
+    if (!hasAuthCookie) {
+      if (isProtected) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/signin'
+        if (path.startsWith('/agent/')) url.searchParams.set('intent', 'agent')
+        url.searchParams.set('next', path)
+        return NextResponse.redirect(url)
+      }
+      return supabaseResponse
+    }
+
     const supabase = createServerClient(supabaseUrl, supabaseKey, {
       cookies: {
         getAll() {
@@ -34,42 +64,19 @@ export async function middleware(request: NextRequest) {
       },
     })
 
-    // Refresh expiring auth tokens
+    // Refresh expiring auth tokens (cookie was present, so user might still be valid)
     const { data: { user } } = await supabase.auth.getUser()
 
-    const path = request.nextUrl.pathname
-
-    // Public, but doesn't need protection: agent profile pages live under /agent/[id]
-    // which look like /agent/<uuid> rather than /agent/dashboard|inquiries|login.
-    // Treat anything under /agent that isn't a known protected segment as public.
-    const PROTECTED_AGENT_SEGMENTS = ['dashboard', 'inquiries', 'messages']
-    const agentMatch = path.match(/^\/agent\/([^/]+)/)
-    const isProtectedAgentRoute = !!(
-      agentMatch && PROTECTED_AGENT_SEGMENTS.includes(agentMatch[1])
-    )
-
-    // Protect agent app routes (login is public, /agent/[id] profile is public)
-    if (isProtectedAgentRoute) {
-      if (!user) {
-        const url = request.nextUrl.clone()
-        url.pathname = '/signin'
-        url.searchParams.set('intent', 'agent')
-        url.searchParams.set('next', path)
-        return NextResponse.redirect(url)
-      }
+    // Even with a cookie, the session might be expired/invalid. Re-check
+    // protected routes against the real user from Supabase.
+    if (isProtected && !user) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/signin'
+      if (path.startsWith('/agent/')) url.searchParams.set('intent', 'agent')
+      url.searchParams.set('next', path)
+      return NextResponse.redirect(url)
     }
 
-    // Buyer-only protected routes
-    if (path.startsWith('/account') || path.startsWith('/messages')) {
-      if (!user) {
-        const url = request.nextUrl.clone()
-        url.pathname = '/signin'
-        url.searchParams.set('next', path)
-        return NextResponse.redirect(url)
-      }
-    }
-
-    // Protect admin routes
     if (path.startsWith('/admin')) {
       if (!user || !user.email || !ADMIN_EMAILS.includes(user.email)) {
         const url = request.nextUrl.clone()

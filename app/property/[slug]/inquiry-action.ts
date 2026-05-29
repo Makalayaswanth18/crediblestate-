@@ -1,7 +1,6 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { supabase } from '@/lib/supabase'
 import { createSupabaseServerClient, getCurrentUser } from '@/lib/supabase-server'
 
 export type InquiryResult =
@@ -46,9 +45,12 @@ export async function submitInquiry(propertyId: string, formData: FormData): Pro
     return { ok: false, error: 'Name is too long.' }
   }
 
+  // Use the cookie-auth'd client throughout for consistency
+  const supabaseAuthed = await createSupabaseServerClient()
+  const user = await getCurrentUser()
+
   // Look up the property (need agent_id even though it's not exposed publicly).
-  // We use the service-style anon client + RLS allows reading verified properties.
-  const { data: property } = await supabase
+  const { data: property } = await supabaseAuthed
     .from('properties')
     .select('id, agent_id, status')
     .eq('id', propertyId)
@@ -58,9 +60,19 @@ export async function submitInquiry(propertyId: string, formData: FormData): Pro
     return { ok: false, error: 'This property is no longer available.' }
   }
 
-  // Use the cookie-auth'd client so RLS sees us as the signed-in buyer (if any).
-  const supabaseAuthed = await createSupabaseServerClient()
-  const user = await getCurrentUser()
+  // Rate limit: a single phone can only inquire about the same property once
+  // per hour. Prevents accidental double-submits and crude spam.
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+  const { count: recentCount } = await supabaseAuthed
+    .from('conversations')
+    .select('id', { count: 'exact', head: true })
+    .eq('property_id', propertyId)
+    .eq('buyer_phone', phone)
+    .gte('created_at', oneHourAgo)
+
+  if ((recentCount ?? 0) > 0) {
+    return { ok: false, error: 'You already sent an inquiry for this property recently. The owner will contact you soon.' }
+  }
 
   let conversationId: string | null = null
 

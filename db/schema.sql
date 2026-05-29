@@ -35,7 +35,7 @@ create table properties (
   is_furnished    boolean default false,
   amenities       text[] default '{}',
   images          text[] default '{}',
-  agent_name      text,
+  agent_name      text,    -- display name of the lister (owner OR agent — see owner_listed flag in migration 006)
   phone           text,
   whatsapp        text,
   status          text not null default 'pending' check (status in ('pending', 'verified', 'rejected', 'rented', 'sold')),

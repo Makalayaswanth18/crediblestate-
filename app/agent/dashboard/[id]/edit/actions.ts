@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { createSupabaseServerClient, isAdmin } from '@/lib/supabase-server'
 
 export type UpdateResult = { ok: true } | { ok: false; error: string }
 
@@ -9,6 +9,8 @@ export async function updateProperty(id: string, formData: FormData): Promise<Up
   const supabase = await createSupabaseServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { ok: false, error: 'Not authenticated. Please sign in again.' }
+
+  const userIsAdmin = isAdmin(user.email)
 
   const title = String(formData.get('title') || '').trim().slice(0, 150)
   const locality = String(formData.get('locality') || '').trim().slice(0, 80)
@@ -58,11 +60,12 @@ export async function updateProperty(id: string, formData: FormData): Promise<Up
     updated_at: new Date().toISOString(),
   }
 
-  const { error } = await supabase
-    .from('properties')
-    .update(updates)
-    .eq('id', id)
-    .eq('agent_id', user.id)
+  // Admins can edit any listing; everyone else can only edit their own.
+  let updateQuery = supabase.from('properties').update(updates).eq('id', id)
+  if (!userIsAdmin) {
+    updateQuery = updateQuery.eq('agent_id', user.id)
+  }
+  const { error } = await updateQuery
 
   if (error) {
     console.error('Update error:', error)
