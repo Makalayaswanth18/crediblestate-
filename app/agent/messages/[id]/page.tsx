@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { createSupabaseServerClient, getCurrentUserWithProfile } from '@/lib/supabase-server'
-import type { Conversation, Message, Property } from '@/lib/supabase'
+import type { Conversation, Message, Property, Visit } from '@/lib/supabase'
 import { formatPrice, buildWaLink } from '@/lib/format'
 import MessageThread from '@/components/MessageThread'
 import { closeConversation } from '@/app/messages/actions'
@@ -29,7 +29,7 @@ export default async function AgentThread({
   const c = convo as Conversation
   if (c.agent_id !== user.id) notFound()
 
-  const [{ data: prop }, { data: msgs }] = await Promise.all([
+  const [{ data: prop }, { data: msgs }, { data: vs }] = await Promise.all([
     supabase
       .from('properties')
       .select('id, slug, title, locality, price, listing_type, whatsapp, phone')
@@ -40,10 +40,16 @@ export default async function AgentThread({
       .select('*')
       .eq('conversation_id', c.id)
       .order('created_at', { ascending: true }),
+    supabase
+      .from('visits')
+      .select('*')
+      .eq('conversation_id', c.id)
+      .order('created_at', { ascending: true }),
   ])
 
   const property = prop as Property | null
   const messages = (msgs as Message[]) ?? []
+  const visits = (vs as Visit[]) ?? []
   const closed = c.status !== 'open'
 
   return (
@@ -99,6 +105,7 @@ export default async function AgentThread({
             viewerRole="agent"
             viewerId={user.id}
             initialMessages={messages}
+            initialVisits={visits}
           />
         </div>
 

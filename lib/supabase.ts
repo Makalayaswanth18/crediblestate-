@@ -143,3 +143,27 @@ export type AgentRatingSummary = {
   review_count: number
   rating_avg: number | null
 }
+
+// ===========================================
+// Visit scheduling — migration 008
+// ===========================================
+
+export type VisitStatus =
+  | 'pending'
+  | 'confirmed'
+  | 'declined'
+  | 'cancelled'
+  | 'completed'
+
+export type Visit = {
+  id: string
+  conversation_id: string
+  property_id: string
+  proposer_id: string
+  proposer_role: 'buyer' | 'agent' | 'owner'
+  proposed_at: string
+  status: VisitStatus
+  note: string | null
+  created_at: string
+  updated_at: string
+}

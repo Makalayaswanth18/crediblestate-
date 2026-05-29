@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { createSupabaseServerClient, getCurrentUser } from '@/lib/supabase-server'
-import type { Conversation, Message, Property, Profile } from '@/lib/supabase'
+import type { Conversation, Message, Property, Profile, Visit } from '@/lib/supabase'
 import { formatPrice } from '@/lib/format'
 import MessageThread from '@/components/MessageThread'
 import LeaveReview from '@/components/LeaveReview'
@@ -29,8 +29,8 @@ export default async function BuyerThread({
   const c = convo as Conversation
   if (c.buyer_id !== user.id) notFound()
 
-  // Property + agent profile (for the header)
-  const [{ data: prop }, { data: agentProfile }, { data: msgs }] = await Promise.all([
+  // Property + agent profile (for the header), messages, visits
+  const [{ data: prop }, { data: agentProfile }, { data: msgs }, { data: vs }] = await Promise.all([
     supabase
       .from('properties')
       .select('id, slug, title, locality, price, listing_type, images, agent_name')
@@ -44,11 +44,17 @@ export default async function BuyerThread({
       .select('*')
       .eq('conversation_id', c.id)
       .order('created_at', { ascending: true }),
+    supabase
+      .from('visits')
+      .select('*')
+      .eq('conversation_id', c.id)
+      .order('created_at', { ascending: true }),
   ])
 
   const property = prop as Property | null
   const agent = agentProfile as Profile | null
   const messages = (msgs as Message[]) ?? []
+  const visits = (vs as Visit[]) ?? []
   const closed = c.status !== 'open'
 
   return (
@@ -94,6 +100,7 @@ export default async function BuyerThread({
             viewerRole="buyer"
             viewerId={user.id}
             initialMessages={messages}
+            initialVisits={visits}
           />
         </div>
 
