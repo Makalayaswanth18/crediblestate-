@@ -75,7 +75,7 @@ export default async function HomePage() {
         </form>
 
         {/* Quick locality chips */}
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', position: 'relative', zIndex: 1, marginBottom: '40px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', position: 'relative', zIndex: 1, marginBottom: '16px' }}>
           {['Kondapur', 'Gachibowli', 'Madhapur', 'Banjara Hills', 'Financial District', 'Miyapur'].map((loc) => (
             <a
               key={loc}
@@ -85,6 +85,16 @@ export default async function HomePage() {
               {loc}
             </a>
           ))}
+        </div>
+
+        {/* Looking for a PG? */}
+        <div style={{ position: 'relative', zIndex: 1, marginBottom: '40px' }}>
+          <Link
+            href="/pg"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#E8732F', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}
+          >
+            🛏️ Looking for a PG? See PGs by area →
+          </Link>
         </div>
 
         <div style={{ display: 'flex', gap: '48px', justifyContent: 'center', flexWrap: 'wrap', position: 'relative', zIndex: 1 }}>

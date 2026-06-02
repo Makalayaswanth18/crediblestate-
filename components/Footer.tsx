@@ -18,7 +18,7 @@ export default function Footer() {
             <h4 style={footerHeading}>Browse</h4>
             <Link href="/rent?type=rent" style={footerLink}>Rentals</Link>
             <Link href="/rent?type=sale" style={footerLink}>Buy Property</Link>
-            <Link href="/rent?property_type=pg" style={footerLink}>PGs</Link>
+            <Link href="/pg" style={footerLink}>PGs by Area</Link>
             <Link href="/rent?property_type=villa" style={footerLink}>Villas</Link>
           </div>
 
