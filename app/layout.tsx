@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter, Playfair_Display } from 'next/font/google'
 import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
@@ -37,12 +37,25 @@ export const metadata: Metadata = {
     title: 'CredibleState — Hyderabad\'s Verified Property Platform',
     description:
       'Verified rentals and sales across Hyderabad. Zero brokerage, direct from owners.',
-    url: 'https://crediblestate.com',
+    url: 'https://www.crediblestate.com',
     siteName: 'CredibleState',
     locale: 'en_IN',
     type: 'website',
+    // app/opengraph-image.(png|jpg) is auto-detected by Next.js; this just
+    // makes the explicit reference clear in case it's served via CDN.
   },
-  metadataBase: new URL('https://crediblestate.com'),
+  twitter: {
+    card: 'summary_large_image',
+    title: 'CredibleState — Hyderabad\'s Verified Property Platform',
+    description: 'Verified rentals and sales across Hyderabad. Zero brokerage.',
+  },
+  metadataBase: new URL('https://www.crediblestate.com'),
+}
+
+export const viewport: Viewport = {
+  themeColor: '#1A120A',
+  width: 'device-width',
+  initialScale: 1,
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

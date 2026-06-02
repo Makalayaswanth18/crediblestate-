@@ -75,26 +75,67 @@ export default async function PropertyDetail({
 
   const p = property as Property
 
+  // Build a "similar properties" query that's actually smart:
+  //   - same listing type (rent vs sale)
+  //   - same locality first; if not enough, broaden
+  //   - ±25% price range to keep matches comparable
+  //   - same BHK count if buyer specified one
+  // We over-fetch (10) then dedupe + slice to 3 so the result feels relevant.
+  const priceLo = Math.floor(Number(p.price) * 0.75)
+  const priceHi = Math.ceil(Number(p.price) * 1.25)
+  let similarQuery = supabase
+    .from('properties')
+    .select('*')
+    .eq('status', 'verified')
+    .eq('listing_type', p.listing_type)
+    .neq('id', p.id)
+    .gte('price', priceLo)
+    .lte('price', priceHi)
+    .ilike('locality', p.locality)
+    .order('created_at', { ascending: false })
+    .limit(6)
+  if (p.bedrooms != null) similarQuery = similarQuery.eq('bedrooms', p.bedrooms)
+
+  // Fallback query if locality+BHK+price returns nothing: broader match
+  // (same listing_type + same locality, no price/BHK constraint)
+  const similarFallbackQuery = supabase
+    .from('properties')
+    .select('*')
+    .eq('status', 'verified')
+    .eq('listing_type', p.listing_type)
+    .neq('id', p.id)
+    .ilike('locality', p.locality)
+    .order('created_at', { ascending: false })
+    .limit(6)
+
   // Agent profile + rating (verified badge, public profile link, star avg)
-  const [{ data: agentProfile }, { data: ratingSummary }, { data: similarRaw }] = await Promise.all([
+  const [{ data: agentProfile }, { data: ratingSummary }, { data: similarTight }, { data: similarBroad }] = await Promise.all([
     p.agent_id
       ? supabase.from('profiles').select('id, full_name, is_verified_agent').eq('id', p.agent_id).maybeSingle()
       : Promise.resolve({ data: null }),
     p.agent_id
       ? supabase.from('agent_rating_summary').select('*').eq('agent_id', p.agent_id).maybeSingle()
       : Promise.resolve({ data: null }),
-    supabase
-      .from('properties')
-      .select('*')
-      .eq('status', 'verified')
-      .eq('listing_type', p.listing_type)
-      .neq('id', p.id)
-      .limit(3),
+    similarQuery,
+    similarFallbackQuery,
   ])
+
+  // Merge tight matches first, then fill in with broader matches, dedupe by id, cap at 3
+  const tight = (similarTight as Property[]) ?? []
+  const broad = (similarBroad as Property[]) ?? []
+  const seen = new Set<string>()
+  const merged: Property[] = []
+  for (const item of [...tight, ...broad]) {
+    if (seen.has(item.id)) continue
+    seen.add(item.id)
+    merged.push(item)
+    if (merged.length === 3) break
+  }
+  const similarRaw = merged
 
   const agent = agentProfile as { id: string; full_name: string | null; is_verified_agent: boolean } | null
   const rating = ratingSummary as { rating_avg: number | null; review_count: number } | null
-  const similar = (similarRaw as Property[]) || []
+  const similar = similarRaw
   const heroImg = p.images && p.images.length > 0 ? p.images[0] : null
   const galleryImgs = p.images && p.images.length > 1 ? p.images.slice(1, 5) : []
 

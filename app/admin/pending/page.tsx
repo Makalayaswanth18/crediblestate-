@@ -109,13 +109,35 @@ export default async function AdminPendingPage() {
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: '0 0 auto' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: '0 0 auto', minWidth: '220px' }}>
                       <a href={`https://wa.me/${(p.whatsapp || p.phone || '').replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ ...adminBtn, background: '#25D366', color: '#fff', borderColor: '#25D366' }}>
                         💬 Verify via WhatsApp
                       </a>
-                      <form action={async () => { 'use server'; await approveListing(p.id) }}>
-                        <button style={{ ...adminBtn, background: '#1E4D35', color: '#fff', borderColor: '#1E4D35', width: '100%' }}>✅ Approve</button>
-                      </form>
+
+                      {p.owner_listed ? (
+                        <>
+                          <form action={async () => { 'use server'; await approveListing(p.id, { ownerConfirmed: 'keep' }) }}>
+                            <button style={{ ...adminBtn, background: '#1E4D35', color: '#fff', borderColor: '#1E4D35', width: '100%' }}>
+                              ✅ Approve + Keep Owner Badge
+                            </button>
+                          </form>
+                          <form action={async () => { 'use server'; await approveListing(p.id, { ownerConfirmed: 'strip' }) }}>
+                            <button style={{ ...adminBtn, background: '#fff', color: '#92400E', borderColor: '#F5C9A0', width: '100%' }}>
+                              ⚠️ Approve but Strip Owner Badge
+                            </button>
+                          </form>
+                          <p style={{ fontSize: '11px', color: '#9C9488', textAlign: 'center', lineHeight: 1.4, margin: '2px 4px 0' }}>
+                            Strip if you found a broker submitted this claiming to be the owner.
+                          </p>
+                        </>
+                      ) : (
+                        <form action={async () => { 'use server'; await approveListing(p.id) }}>
+                          <button style={{ ...adminBtn, background: '#1E4D35', color: '#fff', borderColor: '#1E4D35', width: '100%' }}>
+                            ✅ Approve
+                          </button>
+                        </form>
+                      )}
+
                       <form action={async () => { 'use server'; await rejectListing(p.id) }}>
                         <button style={{ ...adminBtn, background: '#fff', color: '#991B1B', borderColor: '#FCA5A5', width: '100%' }}>✗ Reject</button>
                       </form>
