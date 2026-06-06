@@ -87,14 +87,35 @@ export default async function HomePage() {
           ))}
         </div>
 
-        {/* Looking for a PG? */}
-        <div style={{ position: 'relative', zIndex: 1, marginBottom: '40px' }}>
-          <Link
-            href="/pg"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#E8732F', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}
-          >
-            🛏️ Looking for a PG? See PGs by area →
-          </Link>
+        {/* Property type quick-links — each goes to a hub page showing counts per area */}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', position: 'relative', zIndex: 1, marginBottom: '40px' }}>
+          {[
+            ['🏢', 'Flats by area', '/flats'],
+            ['🛏️', 'PGs by area', '/pg'],
+            ['🏡', 'Villas by area', '/villas'],
+            ['🏬', 'Commercial', '/commercial'],
+            ['🌳', 'Plots', '/plots'],
+          ].map(([emoji, label, href]) => (
+            <Link
+              key={href}
+              href={href}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'rgba(184,74,30,0.18)',
+                border: '0.5px solid rgba(232,115,47,0.4)',
+                color: '#E8732F',
+                padding: '7px 14px',
+                borderRadius: '20px',
+                fontSize: '12px',
+                fontWeight: 600,
+                textDecoration: 'none',
+              }}
+            >
+              <span>{emoji}</span> {label}
+            </Link>
+          ))}
         </div>
 
         <div style={{ display: 'flex', gap: '48px', justifyContent: 'center', flexWrap: 'wrap', position: 'relative', zIndex: 1 }}>

@@ -16,10 +16,11 @@ export default function Footer() {
 
           <div>
             <h4 style={footerHeading}>Browse</h4>
-            <Link href="/rent?type=rent" style={footerLink}>Rentals</Link>
-            <Link href="/rent?type=sale" style={footerLink}>Buy Property</Link>
+            <Link href="/flats" style={footerLink}>Flats by Area</Link>
             <Link href="/pg" style={footerLink}>PGs by Area</Link>
-            <Link href="/rent?property_type=villa" style={footerLink}>Villas</Link>
+            <Link href="/villas" style={footerLink}>Villas by Area</Link>
+            <Link href="/commercial" style={footerLink}>Commercial by Area</Link>
+            <Link href="/plots" style={footerLink}>Plots by Area</Link>
           </div>
 
           <div>
