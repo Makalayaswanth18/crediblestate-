@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Playfair_Display } from 'next/font/google'
+import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
 import './globals.css'
@@ -68,6 +70,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Nav />
         <main style={{ flex: 1 }}>{children}</main>
         <Footer />
+        {/* Vercel Web Analytics — anonymous pageview tracking, no cookies.
+            View at vercel.com/dashboard → crediblestate → Analytics tab. */}
+        <Analytics />
+        {/* Real User Monitoring — tracks Core Web Vitals (LCP, FID, CLS)
+            so we know how the site actually performs on real Indian networks. */}
+        <SpeedInsights />
       </body>
     </html>
   )
