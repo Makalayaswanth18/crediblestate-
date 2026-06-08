@@ -5,6 +5,7 @@ import { supabase, type Property } from '@/lib/supabase'
 import PropertyCard from '@/components/PropertyCard'
 import InquiryForm from '@/components/InquiryForm'
 import PropertyMap from '@/components/PropertyMap'
+import TrackedAnchor from '@/components/TrackedAnchor'
 import { formatPrice, buildWaLink } from '@/lib/format'
 
 export const revalidate = 300 // 5 min
@@ -339,21 +340,25 @@ export default async function PropertyDetail({
               </div>
             )}
 
-            <a
+            <TrackedAnchor
+              event="whatsapp_clicked"
+              payload={{ property_id: p.id, location: 'detail', listing_type: p.listing_type, property_type: p.property_type, locality: p.locality, owner_listed: !!p.owner_listed }}
               href={buildWaLink(p.whatsapp || p.phone, p.title)}
               target="_blank"
               rel="noopener noreferrer"
               style={{ display: 'block', background: '#25D366', color: '#fff', padding: '14px', borderRadius: '11px', textAlign: 'center', fontSize: '15px', fontWeight: 600, textDecoration: 'none', marginBottom: '10px' }}
             >
               {p.owner_listed ? '💬 WhatsApp Owner Directly' : '💬 WhatsApp Agent'}
-            </a>
+            </TrackedAnchor>
             {p.phone && (
-              <a
+              <TrackedAnchor
+                event="phone_called"
+                payload={{ property_id: p.id, location: 'detail', listing_type: p.listing_type, property_type: p.property_type, locality: p.locality }}
                 href={`tel:${p.phone}`}
                 style={{ display: 'block', background: '#100E0B', color: '#fff', padding: '14px', borderRadius: '11px', textAlign: 'center', fontSize: '15px', fontWeight: 600, textDecoration: 'none', marginBottom: '16px' }}
               >
                 📞 Call Now
-              </a>
+              </TrackedAnchor>
             )}
 
             <InquiryForm propertyId={p.id} propertyTitle={p.title} />
@@ -401,13 +406,13 @@ export default async function PropertyDetail({
           <div style={{ fontSize: '11px', color: '#9C9488' }}>{p.locality} · {p.bedrooms ? `${p.bedrooms} BHK` : p.property_type}</div>
         </div>
         {p.phone && (
-          <a href={`tel:${p.phone}`} style={{ background: '#100E0B', color: '#fff', padding: '10px 14px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <TrackedAnchor event="phone_called" payload={{ property_id: p.id, location: 'mobile_bar' }} href={`tel:${p.phone}`} style={{ background: '#100E0B', color: '#fff', padding: '10px 14px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
             📞
-          </a>
+          </TrackedAnchor>
         )}
-        <a href={buildWaLink(p.whatsapp || p.phone, p.title)} target="_blank" rel="noopener noreferrer" style={{ background: '#25D366', color: '#fff', padding: '10px 18px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}>
+        <TrackedAnchor event="whatsapp_clicked" payload={{ property_id: p.id, location: 'mobile_bar' }} href={buildWaLink(p.whatsapp || p.phone, p.title)} target="_blank" rel="noopener noreferrer" style={{ background: '#25D366', color: '#fff', padding: '10px 18px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}>
           💬 WhatsApp
-        </a>
+        </TrackedAnchor>
       </div>
 
       <style>{`

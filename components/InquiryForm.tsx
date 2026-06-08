@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { track } from '@vercel/analytics'
 import { submitInquiry } from '@/app/property/[slug]/inquiry-action'
 import { createSupabaseBrowserClient } from '@/lib/supabase-client'
 
@@ -30,8 +31,12 @@ export default function InquiryForm({
     setError(null)
     const res = await submitInquiry(propertyId, formData)
     setSubmitting(false)
-    if (res.ok) setSentTo(res.conversationId)
-    else setError(res.error)
+    if (res.ok) {
+      setSentTo(res.conversationId)
+      try { track('inquiry_submitted', { property_id: propertyId }) } catch {}
+    } else {
+      setError(res.error)
+    }
   }
 
   if (sentTo) {

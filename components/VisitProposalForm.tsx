@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { track } from '@vercel/analytics'
 import { proposeVisit } from '@/app/messages/visit-actions'
 import type { Visit } from '@/lib/supabase'
 
@@ -48,6 +49,7 @@ export default function VisitProposalForm({
     startTransition(async () => {
       const res = await proposeVisit(conversationId, local.toISOString(), note || null)
       if (!res.ok) { setError(res.error); return }
+      try { track('visit_proposed', { conversation_id: conversationId }) } catch {}
       onProposed(res.visit)
       setOpen(false)
       setNote('')

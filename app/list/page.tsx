@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { track } from '@vercel/analytics'
 import { submitProperty, type ListResult } from './actions'
 import ImageUpload from '@/components/ImageUpload'
 
@@ -16,6 +17,14 @@ export default function ListPage() {
     setResult(res)
     setSubmitting(false)
     if (res.ok) {
+      try {
+        track('listing_submitted', {
+          lister_type: listerType,
+          property_type: String(formData.get('property_type') ?? ''),
+          listing_type: String(formData.get('listing_type') ?? ''),
+          locality: String(formData.get('locality') ?? ''),
+        })
+      } catch {}
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
   }

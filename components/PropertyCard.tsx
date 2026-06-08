@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Property } from '@/lib/supabase'
 import { formatPrice, buildWaLink } from '@/lib/format'
 import FavoriteButton from './FavoriteButton'
+import TrackedAnchor from './TrackedAnchor'
 
 function timeAgo(date: string): string {
   const diff = Date.now() - new Date(date).getTime()
@@ -153,7 +154,9 @@ export default function PropertyCard({ p, isAgentVerified }: { p: Property; isAg
         >
           View Details
         </Link>
-        <a
+        <TrackedAnchor
+          event="whatsapp_clicked"
+          payload={{ property_id: p.id, location: 'card', listing_type: p.listing_type, property_type: p.property_type, locality: p.locality }}
           href={buildWaLink(p.whatsapp || p.phone, p.title)}
           target="_blank"
           rel="noopener noreferrer"
@@ -170,7 +173,7 @@ export default function PropertyCard({ p, isAgentVerified }: { p: Property; isAg
           }}
         >
           💬 WhatsApp
-        </a>
+        </TrackedAnchor>
       </div>
     </article>
   )
