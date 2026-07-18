@@ -37,10 +37,10 @@ export async function generateMetadata({
     openGraph: {
       title: `Verified Properties in ${loc.name}, Hyderabad`,
       description: `${loc.blurb} Zero brokerage. 100% verified.`,
-      url: `https://crediblestate.com/rent/${loc.slug}`,
+      url: `https://www.crediblestate.com/rent/${loc.slug}`,
     },
     alternates: {
-      canonical: `https://crediblestate.com/rent/${loc.slug}`,
+      canonical: `https://www.crediblestate.com/rent/${loc.slug}`,
     },
   }
 }

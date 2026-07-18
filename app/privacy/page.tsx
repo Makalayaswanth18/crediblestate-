@@ -4,7 +4,7 @@ import Link from 'next/link'
 export const metadata: Metadata = {
   title: 'Privacy Policy — CredibleState',
   description: 'How CredibleState collects, uses and protects your personal data.',
-  alternates: { canonical: 'https://crediblestate.com/privacy' },
+  alternates: { canonical: 'https://www.crediblestate.com/privacy' },
 }
 
 const LAST_UPDATED = '25 May 2026'

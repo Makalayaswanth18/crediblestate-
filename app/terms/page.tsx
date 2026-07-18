@@ -4,7 +4,7 @@ import Link from 'next/link'
 export const metadata: Metadata = {
   title: 'Terms of Service — CredibleState',
   description: 'Terms governing your use of the CredibleState property platform.',
-  alternates: { canonical: 'https://crediblestate.com/terms' },
+  alternates: { canonical: 'https://www.crediblestate.com/terms' },
 }
 
 const LAST_UPDATED = '25 May 2026'

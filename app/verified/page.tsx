@@ -4,7 +4,7 @@ import Link from 'next/link'
 export const metadata: Metadata = {
   title: 'What "Verified" Means — CredibleState',
   description: 'Every property on CredibleState is physically inspected before going live. Here is exactly what we check.',
-  alternates: { canonical: 'https://crediblestate.com/verified' },
+  alternates: { canonical: 'https://www.crediblestate.com/verified' },
 }
 
 export default function VerifiedPage() {

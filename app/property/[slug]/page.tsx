@@ -50,11 +50,11 @@ export async function generateMetadata({
     openGraph: {
       title,
       description: desc,
-      url: `https://crediblestate.com/property/${slug}`,
+      url: `https://www.crediblestate.com/property/${slug}`,
       type: 'article',
       images: p.images && p.images.length > 0 ? [{ url: p.images[0], width: 1200, height: 630 }] : [],
     },
-    alternates: { canonical: `https://crediblestate.com/property/${slug}` },
+    alternates: { canonical: `https://www.crediblestate.com/property/${slug}` },
   }
 }
 
@@ -146,7 +146,7 @@ export default async function PropertyDetail({
     '@type': 'RealEstateListing',
     name: p.title,
     description: p.description || `${p.bedrooms ? `${p.bedrooms} BHK ` : ''}${p.property_type} for ${p.listing_type} in ${p.locality}, ${p.city}`,
-    url: `https://crediblestate.com/property/${p.slug}`,
+    url: `https://www.crediblestate.com/property/${p.slug}`,
     image: p.images && p.images.length > 0 ? p.images : undefined,
     address: {
       '@type': 'PostalAddress',
