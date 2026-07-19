@@ -39,7 +39,7 @@ export default async function AgentProfile({
   if (!isUuid(id)) notFound()
 
   const [{ data: profile }, { data: listings }, { data: reviews }, { data: summary }] = await Promise.all([
-    supabase.from('profiles').select('*').eq('id', id).maybeSingle(),
+    supabase.from('public_profiles').select('*').eq('id', id).maybeSingle(),
     supabase
       .from('properties')
       .select('*')

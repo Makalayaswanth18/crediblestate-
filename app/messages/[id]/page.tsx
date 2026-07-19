@@ -37,7 +37,7 @@ export default async function BuyerThread({
       .eq('id', c.property_id)
       .maybeSingle(),
     c.agent_id
-      ? supabase.from('profiles').select('*').eq('id', c.agent_id).maybeSingle()
+      ? supabase.from('public_profiles').select('*').eq('id', c.agent_id).maybeSingle()
       : Promise.resolve({ data: null }),
     supabase
       .from('messages')

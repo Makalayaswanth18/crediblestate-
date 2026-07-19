@@ -112,7 +112,7 @@ export default async function PropertyDetail({
   // Agent profile + rating (verified badge, public profile link, star avg)
   const [{ data: agentProfile }, { data: ratingSummary }, { data: similarTight }, { data: similarBroad }] = await Promise.all([
     p.agent_id
-      ? supabase.from('profiles').select('id, full_name, is_verified_agent').eq('id', p.agent_id).maybeSingle()
+      ? supabase.from('public_profiles').select('id, full_name, is_verified_agent').eq('id', p.agent_id).maybeSingle()
       : Promise.resolve({ data: null }),
     p.agent_id
       ? supabase.from('agent_rating_summary').select('*').eq('agent_id', p.agent_id).maybeSingle()
